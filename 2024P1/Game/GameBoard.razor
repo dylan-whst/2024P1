@@ -1,0 +1,56 @@
+﻿@page "/"
+@using MudBlazor
+@using P1.Models
+@using P1.Services
+
+@inject IGameBoardViewModel GameBoardViewModel;
+
+<MudDropContainer T="Card" Items="GameBoardViewModel.Cards" ItemsSelector="@((item,dropzone) => item.Place == dropzone)" ItemDropped="ItemUpdated" Class="d-flex flex-column flex-grow-1">
+    <ChildContent>
+        <div class="board-grid">
+            @foreach (var (x, y) in GameBoardViewModel.BoardDropZonePositions)
+            {
+                int gridColumn = x + _gridSize / 2;
+                int gridRow = y + _gridSize / 2;
+                
+                <div class="board-grid-item" style="grid-column: @(gridColumn); grid-row: @(gridRow)">
+                    <MudDropZone Class="board-drop-zone rounded-lg mud-alert-text-success pa-4 ma-4 flex-grow-1"
+                                 T="Card" Identifier=@($"board-({x},{y})") 
+                                 CanDrop="@((_) => !GameBoardViewModel.IsCardAtPosition((x, y)))">
+                        <MudText Typo="Typo.button" Class="ma-2">@x, @y</MudText>
+                    </MudDropZone>
+                </div>
+                
+            }
+        </div>
+        <MudDropZone T="Card" Identifier="Hand" CanDrop="@((item) => false)" Class="rounded-lg mud-alert-text-normal pa-4 mt-6 mx-4 flex-grow-1 d-flex flex-wrap"/>
+    </ChildContent>
+    <ItemRenderer>
+        <MudPaper ID=@("card-" + context.Id) Elevation="25" Class="pa-4 ma-2">@context.Name</MudPaper>
+    </ItemRenderer>
+</MudDropContainer>
+
+<style>
+    .board-grid {
+        display: grid;
+        grid-template-columns: repeat(@(_gridSize), @(_boardDropZoneSizePx)px);
+        grid-template-rows: repeat(@(_gridSize), @(_boardDropZoneSizePx)px);
+    }
+
+    .board-grid-item {
+        width: @(_boardDropZoneSizePx)px;
+        height: @(_boardDropZoneSizePx)px;
+    }
+</style>
+
+@code {
+    private int _gridSize = 10;
+    private int _boardDropZoneSizePx = 200;
+    
+    
+    
+    private void ItemUpdated(MudItemDropInfo<Card> dropItem)
+    {
+        GameBoardViewModel.MoveCard(dropItem.Item, dropItem.DropzoneIdentifier);
+    }
+}

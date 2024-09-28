@@ -1,0 +1,162 @@
+
+@using _2024P1.Game
+@using AngleSharp.Dom
+@using FluentAssertions
+@using MudBlazor
+@using MudBlazor.Services
+@using NSubstitute
+@using NUnit.Framework
+@using P1.Models
+@using P1.Services
+@inherits BunitTestContext
+
+
+This is a test for drag/drop interactions with the GameBoard view and its model.
+
+
+@code {
+
+    private IRenderedFragment _cut;
+    private IGameBoardViewModel _gameBoardViewModel;
+    private IGameService _gameService = Substitute.For<IGameService>();
+    
+    private List<Card> _mockHand = [
+        new Card() { Id = 1, Name = "Card a", Letter = "a", Place = "Hand" },
+        new Card() { Id = 2, Name = "Card b", Letter = "b", Place = "Hand" },
+        new Card() { Id = 3, Name = "Card c", Letter = "c", Place = "Hand" }
+    ];
+
+    [SetUp]
+    public void SetUp()
+    {
+        _gameService.DrawHand().Returns(_mockHand);
+        _gameBoardViewModel = new GameBoardViewModel(_gameService);
+        
+        Services.AddScoped(_ => _gameBoardViewModel);
+        Services.AddMudServices();
+        JSInterop.Mode = JSRuntimeMode.Loose;
+    }
+    
+    private string BoardStr(int x, int y) => $"board-({x},{y})";
+    
+    private void CardShouldBeIn(int cardId, string container)
+    {
+        _cut.FindAll($"[identifier='{container}'] #card-{cardId}").Should().NotBeEmpty();
+    }
+    
+    private void CardShouldNotBeIn(int cardId, string container)
+    {
+        _cut.FindAll($"[identifier='{container}'] #card-{cardId}").Should().BeEmpty();
+    }
+    
+    private void DragCardToContainer(int cardId, string container)
+    {
+        _cut.Find($"#card-{cardId}").DragStart();
+        _cut.Find($"[identifier='{container}']").Drop();
+    }
+    
+    private void BoardShouldHave(int x, int y)
+    {
+        _cut.Find($"[identifier='{BoardStr(x, y)}']").Should().NotBeNull();
+    }
+
+
+    [Test]
+    public void Initially__HandHasExpectedCards()
+    {
+        _cut = Render(@<GameBoard/>);
+
+        CardShouldBeIn(cardId: 1, container: "Hand");
+        CardShouldBeIn(cardId: 2, container: "Hand");
+        CardShouldBeIn(cardId: 3, container: "Hand");
+
+    }
+    
+    [Test]
+    public void Initially__BoardIsEmpty()
+    {
+        _cut = Render(@<GameBoard/>);
+
+        CardShouldNotBeIn(cardId: 1, container: BoardStr(0, 0));
+        CardShouldNotBeIn(cardId: 2, container: BoardStr(0, 0));
+        CardShouldNotBeIn(cardId: 3, container: BoardStr(0, 0));
+    }
+    
+    [Test]
+    public void Initially__OnlyOneBoardTile()
+    {
+        _cut = Render(@<GameBoard/>);
+
+        _cut.FindAll(".board-drop-zone").Should().HaveCount(1);
+    }
+
+
+    [Test]
+    public void UserDragsCardOntoBoard__ItMovesFromHandToBoard()
+    {
+        _cut = Render(@<GameBoard/>);
+
+        DragCardToContainer(1, container: BoardStr(0, 0));
+        
+        CardShouldNotBeIn(cardId: 1, container: "Hand");
+        CardShouldBeIn(cardId: 1, container: BoardStr(0, 0));
+    }
+    
+    [Test]
+    public void UserDragsCardOntoBoard__OriginAdjacentDropzonesAppear()
+    {
+        _cut = Render(@<GameBoard/>);
+
+        DragCardToContainer(1, container: BoardStr(0, 0));
+        
+        _cut.FindAll(".board-drop-zone").Should().HaveCount(5);
+        BoardShouldHave(0, 0);
+        BoardShouldHave(0, 1);
+        BoardShouldHave(1, 0);
+        BoardShouldHave(-1, 0);
+        BoardShouldHave(0, -1);
+    }
+    
+    [Test]
+    public void UserDragsCardOntoEmptyBoard__OriginAdjacentBoard_RightOfOrigin__Expected3ZonesAppear()
+    {
+        _cut = Render(@<GameBoard/>);
+        // first make origin adjacent zones appear
+        DragCardToContainer(1, container: BoardStr(0, 0));
+        
+        // then drag card to one of them
+        DragCardToContainer(2, container: BoardStr(0, 1));
+        
+        // 5 zones from origin + 3 zones from new position
+        _cut.FindAll(".board-drop-zone").Should().HaveCount(8);
+        BoardShouldHave(0, 2);
+        BoardShouldHave(1, 1);
+        BoardShouldHave(-1, 1);
+    }
+    
+    [Test]
+    public void UserDragsCardOntoEmptyBoard__OriginAdjacentBoard_LeftOfOrigin__Expected3ZonesAppear()
+    {
+        _cut = Render(@<GameBoard/>);
+        DragCardToContainer(1, container: BoardStr(0, 0));
+        
+        DragCardToContainer(2, container: BoardStr(-1, 0));
+        
+        _cut.FindAll(".board-drop-zone").Should().HaveCount(8);
+        BoardShouldHave(-2, 0);
+        BoardShouldHave(-1, 1);
+        BoardShouldHave(-1, -1);
+    }
+    
+    [Test]
+    public void UserDragsCardOntoNonEmptyBoard__DoesntGetPlaced()
+    {
+        _cut = Render(@<GameBoard/>);
+        DragCardToContainer(1, container: BoardStr(0, 0));
+        
+        DragCardToContainer(2, container: BoardStr(0, 0));
+        
+        CardShouldBeIn(1, BoardStr(0, 0));
+        CardShouldNotBeIn(2, BoardStr(0, 0));
+    }
+}

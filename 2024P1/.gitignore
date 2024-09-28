@@ -1,0 +1,45 @@
+# Ignore build output directories
+bin/
+obj/
+
+# Rider project files
+.idea/
+*.sln.iml
+
+# User-specific files
+*.user
+*.userosscache
+*.suo
+*.userprefs
+
+# Rider specific files
+.idea/
+*.sln.iml
+*.sln.DotSettings
+
+# ASP.NET Core specific files
+appsettings*.json
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Visual Studio Code specific files
+.vscode/
+
+# Node.js dependencies
+node_modules/
+
+# Binaries
+*.dll
+*.exe
+*.so
+*.dylib
+*.class
+
+# OS generated files
+.DS_Store
+Thumbs.db

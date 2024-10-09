@@ -18,19 +18,20 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
 
     private IRenderedFragment _cut;
     private IGameBoardViewModel _gameBoardViewModel;
-    private IGameService _gameService = Substitute.For<IGameService>();
     
     private List<Card> _mockHand = [
-        new Card() { Id = 1, Name = "Card a", Letter = "a", Place = "Hand" },
-        new Card() { Id = 2, Name = "Card b", Letter = "b", Place = "Hand" },
-        new Card() { Id = 3, Name = "Card c", Letter = "c", Place = "Hand" }
+        new Card() { Id = 1, Letter = 'a'},
+        new Card() { Id = 2, Letter = 'b'},
+        new Card() { Id = 3, Letter = 'c'},
     ];
 
     [SetUp]
     public void SetUp()
     {
-        _gameService.DrawHand().Returns(_mockHand);
-        _gameBoardViewModel = new GameBoardViewModel(_gameService);
+        _gameBoardViewModel = new GameBoardViewModel(
+            new Board(),
+            new Hand(_mockHand)
+        );
         
         Services.AddScoped(_ => _gameBoardViewModel);
         Services.AddMudServices();
@@ -66,9 +67,9 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
     {
         _cut = Render(@<GameBoard/>);
 
-        CardShouldBeIn(cardId: 1, container: "Hand");
-        CardShouldBeIn(cardId: 2, container: "Hand");
-        CardShouldBeIn(cardId: 3, container: "Hand");
+        CardShouldBeIn(cardId: 1, container: "hand");
+        CardShouldBeIn(cardId: 2, container: "hand");
+        CardShouldBeIn(cardId: 3, container: "hand");
 
     }
     
@@ -98,7 +99,7 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
 
         DragCardToContainer(1, container: BoardStr(0, 0));
         
-        CardShouldNotBeIn(cardId: 1, container: "Hand");
+        CardShouldNotBeIn(cardId: 1, container: "hand");
         CardShouldBeIn(cardId: 1, container: BoardStr(0, 0));
     }
     

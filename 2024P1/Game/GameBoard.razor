@@ -5,7 +5,7 @@
 
 @inject IGameBoardViewModel GameBoardViewModel;
 
-<MudDropContainer T="Card" Items="GameBoardViewModel.Cards" ItemsSelector="@((item,dropzone) => item.Place == dropzone)" ItemDropped="ItemUpdated" Class="d-flex flex-column flex-grow-1">
+<MudDropContainer T="CardVM" Items="GameBoardViewModel.Cards" ItemsSelector="@((item,dropzone) => item.Place == dropzone)" ItemDropped="ItemUpdated" Class="d-flex flex-column flex-grow-1">
     <ChildContent>
         <div class="board-grid">
             @foreach (var (x, y) in GameBoardViewModel.BoardDropZonePositions)
@@ -15,7 +15,7 @@
                 
                 <div class="board-grid-item" style="grid-column: @(gridColumn); grid-row: @(gridRow)">
                     <MudDropZone Class="board-drop-zone rounded-lg mud-alert-text-success pa-4 ma-4 flex-grow-1"
-                                 T="Card" Identifier=@($"board-({x},{y})") 
+                                 T="CardVM" Identifier=@($"board-({x},{y})") 
                                  CanDrop="@((_) => !GameBoardViewModel.IsCardAtPosition((x, y)))">
                         <MudText Typo="Typo.button" Class="ma-2">@x, @y</MudText>
                     </MudDropZone>
@@ -23,7 +23,7 @@
                 
             }
         </div>
-        <MudDropZone T="Card" Identifier="Hand" CanDrop="@((item) => false)" Class="rounded-lg mud-alert-text-normal pa-4 mt-6 mx-4 flex-grow-1 d-flex flex-wrap"/>
+        <MudDropZone T="CardVM" Identifier="hand" CanDrop="@((item) => false)" Class="rounded-lg mud-alert-text-normal pa-4 mt-6 mx-4 flex-grow-1 d-flex flex-wrap"/>
     </ChildContent>
     <ItemRenderer>
         <MudPaper ID=@("card-" + context.Id) Elevation="25" Class="pa-4 ma-2">@context.Name</MudPaper>
@@ -49,8 +49,9 @@
     
     
     
-    private void ItemUpdated(MudItemDropInfo<Card> dropItem)
+    private void ItemUpdated(MudItemDropInfo<CardVM> dropItem)
     {
         GameBoardViewModel.MoveCard(dropItem.Item, dropItem.DropzoneIdentifier);
+        StateHasChanged();
     }
 }

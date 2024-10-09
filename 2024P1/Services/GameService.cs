@@ -4,17 +4,17 @@ namespace P1.Services;
 
 public interface IGameService
 {
-    List<Card> DrawHand();
+    List<CardVM> DrawHand();
 }
 
 public class StubGameService : IGameService
 {
-    public List<Card> DrawHand()
+    public List<CardVM> DrawHand()
     {
          return [
-            new Card() { Id = 1, Name = "Card a", Letter = "a", Place = "Hand" },
-            new Card() { Id = 2, Name = "Card b", Letter = "b", Place = "Hand" },
-            new Card() { Id = 3, Name = "Card c", Letter = "c", Place = "Hand" }
+            new CardVM() { Id = 1, Name = "Card a", Text = "a", Place = "Hand" },
+            new CardVM() { Id = 2, Name = "Card b", Text = "b", Place = "Hand" },
+            new CardVM() { Id = 3, Name = "Card c", Text = "c", Place = "Hand" }
         ];
     }
 }

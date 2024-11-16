@@ -10,62 +10,61 @@ public interface IGameBoardViewModel
     IEnumerable<(int x, int y)> BoardDropZonePositions { get; }
     bool IsCardAtPosition((int x, int y) pos);
     List<CardVM> Cards { get; }
-    void MoveCard(CardVM cardVm, string place);
+    void MoveCard(CardVM cardVm, string moveToPlace);
 }
 
 
 public class GameBoardViewModel : IGameBoardViewModel
 {
-    private IBoard _board;
-    private IHand _hand;
+    private IBoardService _boardService;
+    private IHandService _handService;
     
-    public GameBoardViewModel(IBoard board, IHand hand)
+    public GameBoardViewModel(IBoardService boardService, IHandService handService)
     {
-        _board = board;
-        _hand = hand;
+        _boardService = boardService;
+        _handService = handService;
     }
+    
+    public List<CardVM> Cards =>
+        _boardService.Cards.Select(c => CardToVm(c.Value, $"board-({c.Key.x},{c.Key.y})"))
+            .Concat(_handService.Cards.Select(c => CardToVm(c, "hand")))
+            .ToList();
 
     public IEnumerable<(int x, int y)> BoardDropZonePositions =>
-        _board.Cards.Count == 0 ? 
+        _boardService.Cards.Count == 0 ? 
             [(0, 0)] 
-            : _board.Cards.Keys.Concat(_board.GetCardAdjacentPositions()).Distinct();
+            : _boardService.Cards.Keys.Concat(_boardService.GetCardAdjacentPositions()).Distinct();
+    
+    public bool IsCardAtPosition((int x, int y) pos) =>
+        _boardService.Cards.ContainsKey(pos);
 
-    public List<CardVM> Cards =>
-            _board.Cards.Select(c => cardToVm(c.Value, $"board-({c.Key.x},{c.Key.y})"))
-                .Concat(_hand.Cards.Select(c => cardToVm(c, "hand")))
-                .ToList();
-
-    private CardVM cardToVm(Card card, string place) =>
-        new CardVM()
+    private static CardVM CardToVm(Card card, string place) =>
+        new()
         {
             Text = card.Letter.ToString(),
             Place = place,
             Id = card.Id,
-            Name = "Card"
         };
 
-    public void MoveCard(CardVM cardVm, string place)
+    public void MoveCard(CardVM cardVm, string moveToPlace)
     {
+        // remove card from old place
+        Card removedCard;
         if (cardVm.Place == "hand")
-            _hand.Remove(cardVm.Id);
+            removedCard = _handService.Remove(cardVm.Id);
         else
-            _board.Remove(GetBoardPosition(cardVm.Place));
+            removedCard = _boardService.Remove(GetBoardPosition(cardVm.Place));
+
+        // add card to new place
+        if (moveToPlace != "hand")
+        {
+            var boardPos = GetBoardPosition(moveToPlace);
+            _boardService.Add(removedCard, boardPos);
+        }
         
-        var boardPos = GetBoardPosition(place);
-        _board.Add(
-            new Card() {
-                Id = cardVm.Id,
-                Letter = char.Parse(cardVm.Text) }, 
-            boardPos);
-        
-        cardVm.Place = place;
+        cardVm.Place = moveToPlace;
     }
     
-    public bool IsCardAtPosition((int x, int y) pos)
-    {
-        return _board.Cards.ContainsKey(pos);
-    }
-
     private static (int x, int y) GetBoardPosition(string place)
     {
         var match = Regex.Match(place, @"\((-?\d+),(-?\d+)\)");

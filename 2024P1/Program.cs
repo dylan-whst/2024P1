@@ -14,9 +14,9 @@ builder.Services.AddMudServices();
 
 builder.Services.AddScoped<IGameBoardViewModel, GameBoardViewModel>();
 builder.Services.AddScoped<IGameService, StubGameService>();
-builder.Services.AddScoped<IBoard, Board>();
-builder.Services.AddScoped<IHand, Hand>(_ => 
-    new Hand([
+builder.Services.AddScoped<IBoardService, BoardService>();
+builder.Services.AddScoped<IHandService, HandService>(_ => 
+    new HandService([
         new Card() { Id = 1, Letter = 'a'},
         new Card() { Id = 2, Letter = 'b'},
         new Card() { Id = 3, Letter = 'c'},

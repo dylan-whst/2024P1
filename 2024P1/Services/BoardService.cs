@@ -2,17 +2,17 @@ using P1.Models;
 
 namespace P1.Services;
 
-public interface IBoard
+public interface IBoardService
 {
     Dictionary<(int x, int y), Card> Cards { get; }
     IEnumerable<(int x, int y)> GetCardAdjacentPositions();
     void Add(Card card, (int x, int y) pos);
-    void Remove((int x, int y) position);
+    Card Remove((int x, int y) position);
 }
 
-public class Board: IBoard
+public class BoardService: IBoardService
 {
-    public Board()
+    public BoardService()
     {
         Cards = new();
     }
@@ -22,9 +22,11 @@ public class Board: IBoard
         Cards.Add(pos, card);
     }
 
-    public void Remove((int x, int y) position)
+    public Card Remove((int x, int y) position)
     {
+        var cardToRemove = Cards[position];
         Cards.Remove(position);
+        return cardToRemove;
     }
 
     public IEnumerable<(int x, int y)> GetCardAdjacentPositions() =>

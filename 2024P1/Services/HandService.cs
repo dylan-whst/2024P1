@@ -6,6 +6,7 @@ public interface IHandService
 {
     List<Card> Cards { get; }
     Card Remove(int id);
+    void Add(Card card);
 }
 
 public class HandService : IHandService
@@ -20,5 +21,10 @@ public class HandService : IHandService
         var cardToRemove = Cards.Single(c => c.Id == id);
         Cards.Remove(cardToRemove);
         return cardToRemove;
+    }
+
+    public void Add(Card card)
+    {
+        Cards.Add(card);
     }
 }

@@ -61,8 +61,8 @@ public class GameBoardViewModel : IGameBoardViewModel
             var boardPos = GetBoardPosition(moveToPlace);
             _boardService.Add(removedCard, boardPos);
         }
-        
-        cardVm.Place = moveToPlace;
+        else
+            _handService.Add(removedCard);
     }
     
     private static (int x, int y) GetBoardPosition(string place)

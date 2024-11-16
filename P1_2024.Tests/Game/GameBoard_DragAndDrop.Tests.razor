@@ -184,22 +184,38 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
         BoardShouldHaveCardAt(1, 0);
     }
 
+    [Test]
+    public void UserDragsCard__BackToHand_DoesntBreakConnection__ItMovesBackToHand()
+    {
+        _cut = Render(@<GameBoard/>);
+        DragCardToContainer(1, container: BoardStr(0, 0));
+    
+        DragCardToContainer(1, container: "hand");
+    
+        BoardShouldNotHaveCardAt(0, 0);
+        CardShouldBeIn(1, "hand");
+    }
+
     @* [Test] *@
-    @* public void UserDragsCard__BackToHand_DoesntBreakConnection__ItMovesBackToHand() *@
+    @* public void UserDragsCard__BackToHand_ItWouldBreakConnection__DoesntMove() *@
     @* { *@
     @*     _cut = Render(@<GameBoard/>); *@
+    @*     // drag cards such that 1 is in the middle. *@
+    @*     // so if it moves, it will break the 'line' *@
     @*     DragCardToContainer(1, container: BoardStr(0, 0)); *@
-    @* *@
+    @*     DragCardToContainer(2, container: BoardStr(-1, 0)); *@
+    @*     DragCardToContainer(3, container: BoardStr(1, 0)); *@
+    @*      *@
     @*     DragCardToContainer(1, container: "hand"); *@
     @*      *@
-    @*     BoardShouldNotHaveCardAt(0, 0); *@
+    @*     BoardShouldHaveCardAt(0, 0); *@
     @* } *@
 
-    
+
+    // [Test]
     // UserDragsOriginCard__Adjacent__ItDoesNotMove
     
     
-    // UserDragsCard__BackToHand_ItWouldBreakConnection__DoesntMove
     
     // UserDragsCard__Adjacent_ItWouldBreakConnection__DoesntMove
 

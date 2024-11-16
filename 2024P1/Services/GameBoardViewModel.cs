@@ -7,56 +7,10 @@ namespace P1.Services;
 
 public interface IGameBoardViewModel
 {
-    List<(int x, int y)> BoardDropZonePositions { get; }
+    IEnumerable<(int x, int y)> BoardDropZonePositions { get; }
     bool IsCardAtPosition((int x, int y) pos);
     List<CardVM> Cards { get; }
     void MoveCard(CardVM cardVm, string place);
-}
-
-public class Card
-{
-    public char Letter { get; set; }
-    public int Id;
-}
-
-public interface IBoard
-{
-    Dictionary<(int x, int y), Card> Cards { get; }
-
-    void Add(Card card, (int x, int y) pos);
-}
-
-public class Board: IBoard
-{
-    public Board()
-    {
-        Cards = new();
-    }
-    public Dictionary<(int x, int y), Card> Cards { get; private set; }
-    public void Add(Card card, (int x, int y) pos)
-    {
-        Cards.Add(pos, card);
-    }
-}
-
-
-public interface IHand
-{
-    List<Card> Cards { get; }
-    void Remove(int id);
-}
-
-public class Hand : IHand
-{
-    public Hand(List<Card> cards)
-    {
-        Cards = cards;
-    }
-    public List<Card> Cards { get; }
-    public void Remove(int id)
-    {
-        Cards.Remove(Cards.Single(c => c.Id == id));
-    }
 }
 
 
@@ -70,8 +24,11 @@ public class GameBoardViewModel : IGameBoardViewModel
         _board = board;
         _hand = hand;
     }
-    
-    public List<(int x, int y)> BoardDropZonePositions { get; } = [(0, 0)];
+
+    public IEnumerable<(int x, int y)> BoardDropZonePositions =>
+        _board.Cards.Count == 0 ? 
+            [(0, 0)] 
+            : _board.Cards.Keys.Concat(_board.GetCardAdjacentPositions()).Distinct();
 
     public List<CardVM> Cards =>
             _board.Cards.Select(c => cardToVm(c.Value, $"board-({c.Key.x},{c.Key.y})"))
@@ -91,6 +48,8 @@ public class GameBoardViewModel : IGameBoardViewModel
     {
         if (cardVm.Place == "hand")
             _hand.Remove(cardVm.Id);
+        else
+            _board.Remove(GetBoardPosition(cardVm.Place));
         
         var boardPos = GetBoardPosition(place);
         _board.Add(
@@ -98,10 +57,6 @@ public class GameBoardViewModel : IGameBoardViewModel
                 Id = cardVm.Id,
                 Letter = char.Parse(cardVm.Text) }, 
             boardPos);
-
-        foreach (var adjacentPos in GetAdjacent(boardPos)
-                     .Where(adjacentPos => !BoardDropZonePositions.Contains(adjacentPos)))
-            BoardDropZonePositions.Add(adjacentPos);
         
         cardVm.Place = place;
     }
@@ -117,11 +72,12 @@ public class GameBoardViewModel : IGameBoardViewModel
         var pos = (int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value));
         return pos;
     }
+}
 
-    private static List<(int x, int y)> GetAdjacent((int x, int y) pos) => [
-        pos with { y = pos.y + 1 },
-        pos with { y = pos.y - 1 },
-        pos with { x = pos.x + 1 },
-        pos with { x = pos.x - 1 }
-    ];
+public class CardVM
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Text { get; set; }
+    public string Place { get; set; }
 }

@@ -19,7 +19,7 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
     private IRenderedFragment _cut;
     private IGameBoardViewModel _gameBoardViewModel;
     
-    private List<Card> _mockHand = [
+    private List<Card> MockHand => [
         new Card() { Id = 1, Letter = 'a'},
         new Card() { Id = 2, Letter = 'b'},
         new Card() { Id = 3, Letter = 'c'},
@@ -30,7 +30,7 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
     {
         _gameBoardViewModel = new GameBoardViewModel(
             new Board(),
-            new Hand(_mockHand)
+            new Hand(MockHand)
         );
         
         Services.AddScoped(_ => _gameBoardViewModel);
@@ -56,9 +56,19 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
         _cut.Find($"[identifier='{container}']").Drop();
     }
     
-    private void BoardShouldHave(int x, int y)
+    private void BoardShouldHaveDropZone(int x, int y)
     {
         _cut.Find($"[identifier='{BoardStr(x, y)}']").Should().NotBeNull();
+    }
+    
+    private void BoardShouldNotHaveCardAt(int x, int y)
+    {
+        _cut.FindAll($"[identifier='{BoardStr(x, y)}'] .card").Should().BeEmpty();
+    }
+    
+    private void BoardShouldHaveCardAt(int x, int y)
+    {
+        _cut.Find($"[identifier='{BoardStr(x, y)}'] .card");
     }
 
 
@@ -111,11 +121,11 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
         DragCardToContainer(1, container: BoardStr(0, 0));
         
         _cut.FindAll(".board-drop-zone").Should().HaveCount(5);
-        BoardShouldHave(0, 0);
-        BoardShouldHave(0, 1);
-        BoardShouldHave(1, 0);
-        BoardShouldHave(-1, 0);
-        BoardShouldHave(0, -1);
+        BoardShouldHaveDropZone(0, 0);
+        BoardShouldHaveDropZone(0, 1);
+        BoardShouldHaveDropZone(1, 0);
+        BoardShouldHaveDropZone(-1, 0);
+        BoardShouldHaveDropZone(0, -1);
     }
     
     [Test]
@@ -130,9 +140,9 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
         
         // 5 zones from origin + 3 zones from new position
         _cut.FindAll(".board-drop-zone").Should().HaveCount(8);
-        BoardShouldHave(0, 2);
-        BoardShouldHave(1, 1);
-        BoardShouldHave(-1, 1);
+        BoardShouldHaveDropZone(0, 2);
+        BoardShouldHaveDropZone(1, 1);
+        BoardShouldHaveDropZone(-1, 1);
     }
     
     [Test]
@@ -144,9 +154,9 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
         DragCardToContainer(2, container: BoardStr(-1, 0));
         
         _cut.FindAll(".board-drop-zone").Should().HaveCount(8);
-        BoardShouldHave(-2, 0);
-        BoardShouldHave(-1, 1);
-        BoardShouldHave(-1, -1);
+        BoardShouldHaveDropZone(-2, 0);
+        BoardShouldHaveDropZone(-1, 1);
+        BoardShouldHaveDropZone(-1, -1);
     }
     
     [Test]
@@ -160,4 +170,38 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
         CardShouldBeIn(1, BoardStr(0, 0));
         CardShouldNotBeIn(2, BoardStr(0, 0));
     }
+    
+    [Test]
+    public void UserDragsCardFromBoard__TooDifferentAvailablePosition__ItMoves()
+    {
+        _cut = Render(@<GameBoard/>);
+        DragCardToContainer(1, container: BoardStr(0, 0));
+        DragCardToContainer(2, container: BoardStr(-1, 0));
+        
+        DragCardToContainer(2, container: BoardStr(1, 0));
+        
+        BoardShouldNotHaveCardAt(-1, 0);
+        BoardShouldHaveCardAt(1, 0);
+    }
+
+    @* [Test] *@
+    @* public void UserDragsCard__BackToHand_DoesntBreakConnection__ItMovesBackToHand() *@
+    @* { *@
+    @*     _cut = Render(@<GameBoard/>); *@
+    @*     DragCardToContainer(1, container: BoardStr(0, 0)); *@
+    @* *@
+    @*     DragCardToContainer(1, container: "hand"); *@
+    @*      *@
+    @*     BoardShouldNotHaveCardAt(0, 0); *@
+    @* } *@
+
+    
+    // UserDragsOriginCard__Adjacent__ItDoesNotMove
+    
+    
+    // UserDragsCard__BackToHand_ItWouldBreakConnection__DoesntMove
+    
+    // UserDragsCard__Adjacent_ItWouldBreakConnection__DoesntMove
+
+    
 }

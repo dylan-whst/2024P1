@@ -20,6 +20,8 @@ builder.Services.AddScoped<IHandService, HandService>(_ =>
         new Card() { Id = 1, Letter = 'a'},
         new Card() { Id = 2, Letter = 'b'},
         new Card() { Id = 3, Letter = 'c'},
+        new Card() { Id = 4, Letter = 'd'},
+        new Card() { Id = 5, Letter = 'e'},
     ]));
 
 await builder.Build().RunAsync();

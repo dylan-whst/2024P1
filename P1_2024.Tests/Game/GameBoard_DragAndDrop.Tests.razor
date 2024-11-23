@@ -23,6 +23,7 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
         new Card() { Id = 1, Letter = 'a'},
         new Card() { Id = 2, Letter = 'b'},
         new Card() { Id = 3, Letter = 'c'},
+        new Card() { Id = 4, Letter = 'd'},
     ];
 
     [SetUp]
@@ -196,28 +197,59 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
         CardShouldBeIn(1, "hand");
     }
 
-    @* [Test] *@
-    @* public void UserDragsCard__BackToHand_ItWouldBreakConnection__DoesntMove() *@
-    @* { *@
-    @*     _cut = Render(@<GameBoard/>); *@
-    @*     // drag cards such that 1 is in the middle. *@
-    @*     // so if it moves, it will break the 'line' *@
-    @*     DragCardToContainer(1, container: BoardStr(0, 0)); *@
-    @*     DragCardToContainer(2, container: BoardStr(-1, 0)); *@
-    @*     DragCardToContainer(3, container: BoardStr(1, 0)); *@
-    @*      *@
-    @*     DragCardToContainer(1, container: "hand"); *@
-    @*      *@
-    @*     BoardShouldHaveCardAt(0, 0); *@
-    @* } *@
+    [Test]
+    public void UserDragsCard__BackToHand_ItWouldBreakConnection__DoesntMove()
+    {
+        _cut = Render(@<GameBoard/>);
+        // drag cards such that 1 is in the middle.
+        // so if it moves, it will break the 'line'
+        DragCardToContainer(1, container: BoardStr(0, 0));
+        DragCardToContainer(2, container: BoardStr(-1, 0));
+        DragCardToContainer(3, container: BoardStr(1, 0));
+    
+        DragCardToContainer(1, container: "hand");
+    
+        BoardShouldHaveCardAt(0, 0);
+    }
+    
+    [Test]
+    public void UserDragsCard__OriginCard_AdjacentToItself__DoesntMove()
+    {
+        _cut = Render(@<GameBoard/>);
+        DragCardToContainer(1, container: BoardStr(0, 0));
+    
+        DragCardToContainer(1, container: BoardStr(-1, 0));
+    
+        BoardShouldNotHaveCardAt(-1, 0);
+    }
 
+    [Test]
+    public void UserDragsCard__NonOriginCard_AdjacentToItself_WouldBreakBoard__DoesntMove()
+    {
+        _cut = Render(@<GameBoard/>);
+        DragCardToContainer(1, container: BoardStr(0, 0));
+        DragCardToContainer(2, container: BoardStr(1, 0));
+    
+        DragCardToContainer(2, container: BoardStr(2, 0));
+    
+        BoardShouldNotHaveCardAt(2, 0);
+    }
+    
+    [Test]
+    public void UserDragsCard__EdgeCase1__DoesntMove()
+    {
+        _cut = Render(@<GameBoard/>);
 
-    // [Test]
-    // UserDragsOriginCard__Adjacent__ItDoesNotMove
+        DragCardToContainer(1, container: BoardStr(0, 0));
+        DragCardToContainer(2, container: BoardStr(-1, 0));
+        DragCardToContainer(3, container: BoardStr(0, -1));
+        DragCardToContainer(4, container: BoardStr(0, -2));
+        
+        // XX        XX
+        //  X   ->   XX
+        //  X
+        DragCardToContainer(4, container: BoardStr(-1,-1));
     
-    
-    
-    // UserDragsCard__Adjacent_ItWouldBreakConnection__DoesntMove
-
-    
+        BoardShouldHaveCardAt(-1, -1);
+    }
 }

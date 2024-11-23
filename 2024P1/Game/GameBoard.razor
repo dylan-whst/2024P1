@@ -3,16 +3,16 @@
 @using P1.Models
 @using P1.Services
 
-@inject IGameBoardViewModel GameBoardViewModel;
+@inject IGameBoardViewModel _viewModel;
 @inject IJSRuntime JS;
 
 <MudDropContainer Class="d-flex flex-column flex-grow-1" T="CardVM" 
-                  Items="GameBoardViewModel.Cards" 
+                  Items="_viewModel.Cards" 
                   ItemsSelector="@((item,dropzone) => item.Place == dropzone)"
                   ItemDropped="ItemUpdated">
     <ChildContent>
         <div @ref=@boardGridRef class="board-grid" style="max-width: 80vw; max-height: 60vh; overflow:  scroll;">
-            @foreach (var (x, y) in GameBoardViewModel.BoardDropZonePositions)
+            @foreach (var (x, y) in _viewModel.BoardDropZonePositions)
             {
                 int gridColumn = x + _gridSize/2;
                 int gridRow = y + _gridSize/2;
@@ -20,7 +20,7 @@
                 <div class="board-grid-item d-flex justify-center align-center" style="grid-column: @(gridColumn); grid-row: @(gridRow)">
                     <MudDropZone Class="board-drop-zone rounded-lg flex-grow-1"
                                  T="CardVM" Identifier=@($"board-({x},{y})")
-                                 CanDrop="@((_) => !GameBoardViewModel.IsCardAtPosition((x, y)))">
+                                 CanDrop="@((card) => CanCardBeDroppedAt(card, (x, y)))">
                     </MudDropZone>
                 </div>
             }
@@ -28,7 +28,7 @@
 
         <MudDropZone Class="rounded-lg flex-grow-1 d-flex flex-wrap" T="CardVM"
                      Identifier="hand"
-                     CanDrop="@((item) => true)"/>
+                     CanDrop="@((card) => _viewModel.CanCardBeMovedToHand(card))"/>
     </ChildContent>
     <ItemRenderer>
         <MudPaper ID=@("card-" + context.Id)
@@ -87,7 +87,14 @@
     
     private void ItemUpdated(MudItemDropInfo<CardVM> dropItem)
     {
-        GameBoardViewModel.MoveCard(dropItem.Item, dropItem.DropzoneIdentifier);
+        _viewModel.MoveCard(dropItem.Item, dropItem.DropzoneIdentifier);
         StateHasChanged();
     }
+
+    private bool CanCardBeDroppedAt(CardVM card, (int x, int y) pos)
+    {
+        return !_viewModel.IsCardAtPosition(pos)
+               && _viewModel.CanCardBeMovedToBoardPos(card, pos) ;
+    }
+
 }

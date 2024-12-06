@@ -1,0 +1,47 @@
+
+@using _2024P1.Game
+@using AngleSharp.Dom
+@using FluentAssertions
+@using MudBlazor
+@using MudBlazor.Services
+@using NSubstitute
+@using NUnit.Framework
+@using P1.Models
+@using P1.Services
+@inherits GameBoardTestBase
+
+
+This is a test for what happens when clicking the 'play' button after playing basic letter cards only.
+
+
+@code {
+    private IGameBoardViewModel _gameBoardViewModel;
+    
+    private List<Card> MockHand => [
+        new Card() { Id = 1, Letter = 'a'},
+        new Card() { Id = 2, Letter = 'b'},
+        new Card() { Id = 3, Letter = 'c'},
+        new Card() { Id = 4, Letter = 'd'},
+    ];
+
+    [SetUp]
+    public void SetUp()
+    {
+        _gameBoardViewModel = new GameBoardViewModel(
+            new BoardService(),
+            new HandService(MockHand)
+        );
+        
+        Services.AddScoped(_ => _gameBoardViewModel);
+        Services.AddMudServices();
+        JSInterop.Mode = JSRuntimeMode.Loose;
+    }
+
+
+    [Test]
+    public void Initially__()
+    {
+        _cut = Render(@<GameBoard/>);
+
+    }
+}

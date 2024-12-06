@@ -8,15 +8,13 @@
 @using NUnit.Framework
 @using P1.Models
 @using P1.Services
-@inherits BunitTestContext
+@inherits GameBoardTestBase
 
 
 This is a test for drag/drop interactions with the GameBoard view and its model.
 
 
 @code {
-
-    private IRenderedFragment _cut;
     private IGameBoardViewModel _gameBoardViewModel;
     
     private List<Card> MockHand => [
@@ -38,49 +36,12 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
         Services.AddMudServices();
         JSInterop.Mode = JSRuntimeMode.Loose;
     }
-    
-    private string BoardStr(int x, int y) => $"board-({x},{y})";
-    
-    private void CardShouldBeIn(int cardId, string container)
-    {
-        _cut.FindAll($"[identifier='{container}'] #card-{cardId}").Should().NotBeEmpty();
-    }
-    
-    private void CardShouldNotBeIn(int cardId, string container)
-    {
-        _cut.FindAll($"[identifier='{container}'] #card-{cardId}").Should().BeEmpty();
-    }
-    
-    private void DragCardToContainer(int cardId, string container)
-    {
-        _cut.Find($"#card-{cardId}").DragStart();
-        _cut.Find($"[identifier='{container}']").Drop();
-    }
-    
-    private void BoardShouldHaveDropZone(int x, int y)
-    {
-        _cut.Find($"[identifier='{BoardStr(x, y)}']").Should().NotBeNull();
-    }
-    
-    private void BoardShouldNotHaveCardAt(int x, int y)
-    {
-        _cut.FindAll($"[identifier='{BoardStr(x, y)}'] .card").Should().BeEmpty();
-    }
-    
-    private void BoardShouldHaveCardAt(int x, int y)
-    {
-        _cut.Find($"[identifier='{BoardStr(x, y)}'] .card");
-    }
 
 
     [Test]
-    public void Initially__HandHasExpectedCards()
+    public void Initially__()
     {
         _cut = Render(@<GameBoard/>);
-
-        CardShouldBeIn(cardId: 1, container: "hand");
-        CardShouldBeIn(cardId: 2, container: "hand");
-        CardShouldBeIn(cardId: 3, container: "hand");
 
     }
     

@@ -11,24 +11,28 @@
                   ItemsSelector="@((item,dropzone) => item.Place == dropzone)"
                   ItemDropped="ItemUpdated">
     <ChildContent>
-        <div @ref=@boardGridRef class="board-grid" style="max-width: 80vw; max-height: 60vh; overflow:  scroll;">
-            @foreach (var (x, y) in _viewModel.BoardDropZonePositions)
-            {
+        
+
+        <div style="width: 100%; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center">
+            <div @ref=@boardGridRef class="board-grid" style="max-width: 80vw; max-height: 60vh; overflow:  scroll;">
+                @foreach (var (x, y) in _viewModel.BoardDropZonePositions)
+                {
                 int gridColumn = x + _gridSize/2;
                 int gridRow = y + _gridSize/2;
-                
+
                 <div class="board-grid-item d-flex justify-center align-center" style="grid-column: @(gridColumn); grid-row: @(gridRow)">
                     <MudDropZone Class="board-drop-zone rounded-lg flex-grow-1"
                                  T="CardVM" Identifier=@($"board-({x},{y})")
                                  CanDrop="@((card) => CanCardBeDroppedAt(card, (x, y)))">
                     </MudDropZone>
                 </div>
-            }
+                }
+            </div>
+            <MudDropZone Class="hand-drop-zone m-5 rounded-lg d-flex flex-grow-1  flex-wrap " T="CardVM"
+                         Identifier="hand"
+                         CanDrop="@((card) => _viewModel.CanCardBeMovedToHand(card))"/>
         </div>
-
-        <MudDropZone Class="rounded-lg flex-grow-1 d-flex flex-wrap" T="CardVM"
-                     Identifier="hand"
-                     CanDrop="@((card) => _viewModel.CanCardBeMovedToHand(card))"/>
+        
     </ChildContent>
     <ItemRenderer>
         <MudPaper ID=@("card-" + context.Id)
@@ -52,6 +56,21 @@
         background-color: var(--mud-palette-dark-hover);
     }
     
+    .hand-drop-zone {
+        align-items: center;
+        justify-content: center;
+        background-color: var(--mud-palette-dark-hover);
+        min-width: 600px;
+        max-width: 600px;
+        min-height: 137px;
+        max-height: 137px;
+        display: flex
+    }
+    
+    .hand-drop-zone .card {
+        margin: 7px;
+    }
+    
     
     .board-grid {
         display: grid;
@@ -67,7 +86,7 @@
 
 @code {
     private int _gridSize = 10;
-    private int _boardDropZoneSizePx = 125;
+    private int _boardDropZoneSizePx = 115;
     private bool _cardHovered = false;
 
     private ElementReference boardGridRef;

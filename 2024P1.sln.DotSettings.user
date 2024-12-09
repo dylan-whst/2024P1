@@ -5,7 +5,5 @@
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=a5425930_002D315f_002D4e24_002Dbd39_002D0f864c270e20/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Session" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
-  &lt;TestAncestor&gt;
-    &lt;TestId&gt;NUnit3x::CC777FF1-4CFE-466F-ADAE-EE676E6B8977::net8.0::BlazorTestProject1.Game.GameBoard_DragAndDrop_Tests&lt;/TestId&gt;
-  &lt;/TestAncestor&gt;
+  &lt;Project Location="/Users/dylanwhitehurst/RiderProjects/2024P1/P1_2024.Tests" Presentation="&amp;lt;P1_2024.Tests&amp;gt;" /&gt;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

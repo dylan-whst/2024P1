@@ -1,0 +1,90 @@
+
+@using _2024P1.Game
+@using AngleSharp.Dom
+@using FluentAssertions
+@using MudBlazor
+@using MudBlazor.Services
+@using NSubstitute
+@using NUnit.Framework
+@using P1.Models
+@using P1.Services
+@inherits GameBoardTestBase
+
+
+This is a test for what happens when clicking the 'play cards' button 
+after playing basic letter cards on an empty board.
+
+
+@code {
+    private IGameBoardViewModel _gameBoardViewModel;
+    private IWordValidator _mockWordValidator = Substitute.For<IWordValidator>();
+    
+    private List<Card> MockHand => [
+        new LetterCard() { Id = 1, Letter = 'a'},
+        new LetterCard() { Id = 2, Letter = 'b'},
+        new LetterCard() { Id = 3, Letter = 'c'},
+        new LetterCard() { Id = 4, Letter = 'd'},
+    ];
+
+    [SetUp]
+    public void SetUp()
+    {
+        _gameBoardViewModel = new GameBoardViewModel(
+            new BoardService(),
+            new HandService(MockHand),
+            _mockWordValidator
+        );
+        
+        Services.AddScoped(_ => _gameBoardViewModel);
+        Services.AddMudServices();
+        JSInterop.Mode = JSRuntimeMode.Loose;
+    }
+
+
+    [Test]
+    public void Initially__PlayCardsBtnDisabled()
+    {
+        _cut = Render(@<GameBoard/>);
+
+        _cut.Find("#play-cards-btn").HasAttribute("disabled")
+            .Should().BeTrue();
+    }
+    
+    [Test]
+    public void CardIsMovedOnBoard__PlayCardsBtnIsEnabled()
+    {
+        _cut = Render(@<GameBoard/>);
+        
+        DragCardToContainer(1, BoardStr(0, 0));
+
+        _cut.Find("#play-cards-btn").HasAttribute("disabled")
+            .Should().BeFalse();
+    }
+    
+    [Test]
+    public void PlayCardsBtnClicked__AfterCardIsOnBoard__BtnIsEnabled()
+    {
+        _cut = Render(@<GameBoard/>);
+        
+        DragCardToContainer(1, BoardStr(0, 0));
+
+        _cut.Find("#play-cards-btn").HasAttribute("disabled")
+            .Should().BeFalse();
+    }
+    
+    [Test]
+    public void PlayCardsBtnClicked__AfterSingleValidWordPlaced__Horizontally__SuccessIndicationShown()
+    {
+        _cut = Render(@<GameBoard/>);
+        _mockWordValidator.Validate("bad")
+            .Returns(new WordValidationResult(true, "Not good"));
+        DragCardToContainer(2, BoardStr(0, 0));
+        DragCardToContainer(1, BoardStr(1, 0));
+        DragCardToContainer(4, BoardStr(2, 0));
+        // the word 'bad'
+        
+        _cut.Find("#play-cards-btn").Click();
+
+        _gameBoardViewModel.Cards.Single(c => c.Id == 2).Highlight.Should().Be(CardHighlight.Success);
+    }
+}

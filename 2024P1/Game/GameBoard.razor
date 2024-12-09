@@ -17,15 +17,15 @@
             <div @ref=@boardGridRef class="board-grid" style="max-width: 80vw; max-height: 60vh; overflow:  scroll;">
                 @foreach (var (x, y) in _viewModel.BoardDropZonePositions)
                 {
-                int gridColumn = x + _gridSize/2;
-                int gridRow = y + _gridSize/2;
+                    int gridColumn = x + _gridSize/2;
+                    int gridRow = y + _gridSize/2;
 
-                <div class="board-grid-item d-flex justify-center align-center" style="grid-column: @(gridColumn); grid-row: @(gridRow)">
-                    <MudDropZone Class="board-drop-zone rounded-lg flex-grow-1"
-                                 T="CardVM" Identifier=@($"board-({x},{y})")
-                                 CanDrop="@((card) => CanCardBeDroppedAt(card, (x, y)))">
-                    </MudDropZone>
-                </div>
+                    <div class="board-grid-item d-flex justify-center align-center" style="grid-column: @(gridColumn); grid-row: @(gridRow)">
+                        <MudDropZone Class="board-drop-zone rounded-lg flex-grow-1"
+                                     T="CardVM" Identifier=@($"board-({x},{y})")
+                                     CanDrop="@((card) => CanCardBeDroppedAt(card, (x, y)))">
+                        </MudDropZone>
+                    </div>
                 }
             </div>
             <MudDropZone Class="hand-drop-zone m-5 rounded-lg d-flex flex-grow-1  flex-wrap " T="CardVM"
@@ -41,6 +41,12 @@
         </MudPaper>
     </ItemRenderer>
 </MudDropContainer>
+
+<MudButton ID='play-cards-btn' 
+           Disabled="_viewModel.NumCardsOnBoard == 0"
+           OnClick="_viewModel.PlayCards">
+    Play Cards
+</MudButton>
 
 <style>
     .card {

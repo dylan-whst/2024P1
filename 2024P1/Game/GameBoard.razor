@@ -8,7 +8,7 @@
 
 <MudDropContainer Class="d-flex flex-column flex-grow-1" T="CardVM" 
                   Items="_viewModel.Cards" 
-                  ItemsSelector="@((item,dropzone) => item.Place == dropzone)"
+                  ItemsSelector="@((item, dropzone) => item.Place.ToString() == dropzone)"
                   ItemDropped="ItemUpdated">
     <ChildContent>
         
@@ -112,7 +112,7 @@
     
     private void ItemUpdated(MudItemDropInfo<CardVM> dropItem)
     {
-        _viewModel.MoveCard(dropItem.Item, dropItem.DropzoneIdentifier);
+        _viewModel.MoveCard(dropItem.Item, new CardPlace(dropItem.DropzoneIdentifier));
         StateHasChanged();
     }
 

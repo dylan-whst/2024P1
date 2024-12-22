@@ -7,4 +7,5 @@ public class Card
 public class LetterCard: Card
 {
     public char Letter { get; set; }
+    public int Points { get; set; }
 }

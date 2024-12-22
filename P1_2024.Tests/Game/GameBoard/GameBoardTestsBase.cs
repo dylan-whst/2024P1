@@ -20,6 +20,7 @@ public abstract class GameBoardTestBase : BunitTestContext
 
     protected void DragCardToContainer(int cardId, string container)
     {
+        _cut.Find($"#card-{cardId}").MouseOver();
         _cut.Find($"#card-{cardId}").DragStart();
         _cut.Find($"[identifier='{container}']").Drop();
     }

@@ -4,7 +4,7 @@ namespace P1.Services;
 
 public interface IBoardService
 {
-    Dictionary<(int x, int y), Card> Cards { get; }
+    Dictionary<(int x, int y), Card> BoardState { get; }
     IEnumerable<(int x, int y)> GetCardAdjacentPositions();
     void Add(Card card, (int x, int y) pos);
     Card Remove((int x, int y) position);
@@ -16,29 +16,29 @@ public class BoardService: IBoardService
 {
     public BoardService()
     {
-        Cards = new();
+        BoardState = new();
     }
-    public Dictionary<(int x, int y), Card> Cards { get; private set; }
+    public Dictionary<(int x, int y), Card> BoardState { get; private set; }
     public void Add(Card card, (int x, int y) pos)
     {
-        Cards.Add(pos, card);
+        BoardState.Add(pos, card);
     }
 
     public Card Remove((int x, int y) position)
     {
-        var cardToRemove = Cards[position];
-        Cards.Remove(position);
+        var cardToRemove = BoardState[position];
+        BoardState.Remove(position);
         return cardToRemove;
     }
 
     public IEnumerable<(int x, int y)> GetCardAdjacentPositions() =>
-        Cards.Keys
+        BoardState.Keys
             .SelectMany(GetAdjacent)
             .Distinct();
 
     public bool WouldCardBreakBoardIfGone((int x, int y) pos)
     {
-        var tempCardsCopy = Cards.ToDictionary(c => c.Key, c => c.Value);
+        var tempCardsCopy = BoardState.ToDictionary(c => c.Key, c => c.Value);
         tempCardsCopy.Remove(pos);
 
         return IsHypotheticalBoardBroken(tempCardsCopy);
@@ -46,7 +46,7 @@ public class BoardService: IBoardService
 
     public bool WouldCardBreakBoardIfMoved((int x, int y) cardPos, (int x, int y) destPos)
     {
-        var tempCardsCopy = Cards.ToDictionary(c => c.Key, c => c.Value);
+        var tempCardsCopy = BoardState.ToDictionary(c => c.Key, c => c.Value);
         var card = tempCardsCopy[cardPos];
         tempCardsCopy.Remove(cardPos);
         tempCardsCopy.Add(destPos, card);
@@ -81,9 +81,9 @@ public class BoardService: IBoardService
         }
         
         if (numVisited == board.Count)
-            return true;
-        else
             return false;
+        else
+            return true;
     }
 
     private static IEnumerable<(int x, int y)> GetAdjacent((int x, int y) pos) => [

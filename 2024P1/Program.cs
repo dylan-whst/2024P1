@@ -15,13 +15,16 @@ builder.Services.AddMudServices();
 builder.Services.AddScoped<IGameBoardViewModel, GameBoardViewModel>();
 builder.Services.AddScoped<IGameService, StubGameService>();
 builder.Services.AddScoped<IBoardService, BoardService>();
+builder.Services.AddScoped<IWordValidator, DictionaryApiWordValidator>();
+builder.Services.AddScoped<IPlayCardsService, PlayCardsService>();
 builder.Services.AddScoped<IHandService, HandService>(_ => 
-    new HandService([
-        new LetterCard() { Id = 1, Letter = 'a'},
-        new LetterCard() { Id = 2, Letter = 'b'},
-        new LetterCard() { Id = 3, Letter = 'c'},
-        new LetterCard() { Id = 4, Letter = 'd'},
-        new LetterCard() { Id = 5, Letter = 'e'},
-    ]));
+    new HandService(
+        Enumerable.Range('a', 7).Select((c, index) => (Card)new LetterCard()
+        {
+            Id = index + 1,
+            Letter = (char)c,
+            Points = index
+        }).ToList()
+    ));
 
 await builder.Build().RunAsync();

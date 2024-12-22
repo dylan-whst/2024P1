@@ -1,12 +1,25 @@
 ﻿@using MudBlazor
+@using MudBlazor.Utilities
 @inherits LayoutComponentBase
 
 <div class="page">
     <main>
-        <article class="content px-4">
-            <MudThemeProvider/>
+        <article class="content" style="padding: 0px !important;">
+            <MudThemeProvider Theme="_theme"/>
             <MudPopoverProvider />
             @Body
         </article>
     </main>
 </div>
+
+@code {
+
+    MudTheme _theme = new MudTheme()
+    {
+        PaletteLight = new PaletteLight()
+        {
+            Success = new MudColor(195, 221, 137, 255)
+        }
+    };
+
+}

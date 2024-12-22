@@ -18,73 +18,325 @@ after playing basic letter cards on an empty board.
 @code {
     private IGameBoardViewModel _gameBoardViewModel;
     private IWordValidator _mockWordValidator = Substitute.For<IWordValidator>();
-    
-    private List<Card> MockHand => [
-        new LetterCard() { Id = 1, Letter = 'a'},
-        new LetterCard() { Id = 2, Letter = 'b'},
-        new LetterCard() { Id = 3, Letter = 'c'},
-        new LetterCard() { Id = 4, Letter = 'd'},
-    ];
+    private IBoardService _mockBoardService = Substitute.For<IBoardService>();
+    private IHandService _mockHandService = Substitute.For<IHandService>();
 
     [SetUp]
     public void SetUp()
     {
-        _gameBoardViewModel = new GameBoardViewModel(
-            new BoardService(),
-            new HandService(MockHand),
-            _mockWordValidator
-        );
+        _mockHandService.Cards.Returns(new List<Card>());
         
         Services.AddScoped(_ => _gameBoardViewModel);
         Services.AddMudServices();
         JSInterop.Mode = JSRuntimeMode.Loose;
     }
 
+    private void ConstructVM()
+    {
+        _gameBoardViewModel = new GameBoardViewModel(
+            _mockBoardService,
+            _mockHandService,
+            new PlayCardsService(_mockWordValidator)
+        );
+    }
+
 
     [Test]
-    public void Initially__PlayCardsBtnDisabled()
+    public void NoCardsOnBoard__PlayCardsBtnDisabled()
     {
+        _mockBoardService.BoardState.Returns(
+            new Dictionary<(int x, int y), Card>() );
+        ConstructVM();
+        
         _cut = Render(@<GameBoard/>);
 
         _cut.Find("#play-cards-btn").HasAttribute("disabled")
             .Should().BeTrue();
     }
+
+    private LetterCard cardA => new() { Id = 1, Letter = 'a', Points = 1};
+    private LetterCard cardB => new() { Id = 2, Letter = 'b', Points = 3 };
+    private LetterCard cardC => new() { Id = 3, Letter = 'c', Points = 3 };
+    private LetterCard cardD => new() { Id = 4, Letter = 'd', Points = 2 };
+    private LetterCard cardE => new() { Id = 5, Letter = 'e', Points = 1 };
+    private LetterCard cardI => new() { Id = 6, Letter = 'i', Points = 1 };
+    private LetterCard cardO => new() { Id = 7, Letter = 'o', Points = 1 };
     
     [Test]
-    public void CardIsMovedOnBoard__PlayCardsBtnIsEnabled()
+    public void CardIsOnBoard__PlayCardsBtnIsEnabled()
     {
-        _cut = Render(@<GameBoard/>);
+        _mockBoardService.BoardState.Returns(
+            new Dictionary<(int x, int y), Card>()
+            {
+                {(x: 0, y: 0), cardA},
+            } );
+        ConstructVM();
         
-        DragCardToContainer(1, BoardStr(0, 0));
+        _cut = Render(@<GameBoard/>);
 
         _cut.Find("#play-cards-btn").HasAttribute("disabled")
             .Should().BeFalse();
     }
-    
-    [Test]
-    public void PlayCardsBtnClicked__AfterCardIsOnBoard__BtnIsEnabled()
-    {
-        _cut = Render(@<GameBoard/>);
-        
-        DragCardToContainer(1, BoardStr(0, 0));
 
-        _cut.Find("#play-cards-btn").HasAttribute("disabled")
-            .Should().BeFalse();
+    private void ExpectCardHighlights(int[] ids, CardHighlight expectedHighlight)
+    {
+        _gameBoardViewModel.Cards
+            .Where(c => ids.Contains(c.Id))
+            .Select(c => c.Highlight)
+            .Should().AllBeEquivalentTo(expectedHighlight);
     }
     
     [Test]
-    public void PlayCardsBtnClicked__AfterSingleValidWordPlaced__Horizontally__SuccessIndicationShown()
+    public void PlayCardsBtnClicked__AfterSingleValidWordPlaced_Horizontally__WordsLettersHighlightedSuccess()
     {
-        _cut = Render(@<GameBoard/>);
         _mockWordValidator.Validate("bad")
             .Returns(new WordValidationResult(true, "Not good"));
-        DragCardToContainer(2, BoardStr(0, 0));
-        DragCardToContainer(1, BoardStr(1, 0));
-        DragCardToContainer(4, BoardStr(2, 0));
-        // the word 'bad'
+        _mockBoardService.BoardState.Returns(
+            new Dictionary<(int x, int y), Card>()
+            {
+                {(x: 0, y: 0), cardB},
+                {(x: 1, y: 0), cardA},
+                {(x: 2, y: 0), cardD},
+            } );
+        ConstructVM();
+        _cut = Render(@<GameBoard/>);
+        
+        _cut.Find("#play-cards-btn").Click();
+        
+        ExpectCardHighlights([cardB.Id, cardA.Id, cardD.Id], CardHighlight.Success);
+    }
+    
+    [Test]
+    public void PlayCardsBtnClicked__AfterSingleInvalidWordPlaced_Horizontally__WordsLettersHighlightedFailure()
+    {
+        _mockWordValidator.Validate("bda")
+            .Returns(new WordValidationResult(false, "Not good"));
+        _mockBoardService.BoardState.Returns(
+            new Dictionary<(int x, int y), Card>()
+            {
+                {(x: 0, y: 0), cardB},
+                {(x: 1, y: 0), cardD},
+                {(x: 2, y: 0), cardA},
+            } );
+        ConstructVM();
+        _cut = Render(@<GameBoard/>);
         
         _cut.Find("#play-cards-btn").Click();
 
-        _gameBoardViewModel.Cards.Single(c => c.Id == 2).Highlight.Should().Be(CardHighlight.Success);
+        ExpectCardHighlights([cardB.Id, cardD.Id, cardA.Id], CardHighlight.Failure);
+
     }
+    
+    [Test]
+    public void PlayCardsBtnClicked__OneHorizontalAndOneVertical_BothValid__WordsLettersHighlightedSuccess()
+    {
+        // ARRANGE
+        _mockWordValidator.Validate("cab")
+            .Returns(new WordValidationResult(true, ""));
+        _mockWordValidator.Validate("ad")
+            .Returns(new WordValidationResult(true, ""));
+        _mockBoardService.BoardState.Returns(
+            new Dictionary<(int x, int y), Card>()
+            {
+                {(x: 0, y: 0), cardC},
+                {(x: 1, y: 0), cardA},
+                {(x: 2, y: 0), cardB},
+                
+                //forms 'AD'
+                {(x: 1, y: 1), cardD}
+            } );
+        ConstructVM();
+        _cut = Render(@<GameBoard/>);
+        
+        _cut.Find("#play-cards-btn").Click();
+        
+        ExpectCardHighlights([cardC.Id, cardA.Id, cardB.Id,     cardD.Id], CardHighlight.Success);
+
+    }
+    
+    [Test]
+    public void PlayCardsBtnClicked__OneHorizontalAndOneVertical_OneInvalidOneValid__ExpectedCorrespondingHighlight()
+    {
+        // ARRANGE
+        _mockWordValidator.Validate("cab")
+            .Returns(new WordValidationResult(true, ""));
+        _mockWordValidator.Validate("bd")
+            .Returns(new WordValidationResult(false, ""));
+        _mockBoardService.BoardState.Returns(
+            new Dictionary<(int x, int y), Card>()
+            {
+                {(x: 0, y: 0), cardC},
+                {(x: 1, y: 0), cardA},
+                {(x: 2, y: 0), cardB},
+                
+                //forms 'BD'
+                {(x: 2, y: 1), cardD}
+            } );
+        ConstructVM();
+        _cut = Render(@<GameBoard/>);
+        
+        _cut.Find("#play-cards-btn").Click();
+        
+        // 'a' is not success because failure 'overrides' success
+        ExpectCardHighlights([cardC.Id, cardA.Id], CardHighlight.Success);
+
+        ExpectCardHighlights([cardB.Id, cardD.Id], CardHighlight.Failure);
+    }
+    
+    [Test]
+    public void PlayCardsBtnClicked__MultipleHorizontal_OneVertical_AllValid__ExpectedSuccessHighlight()
+    {
+        // ARRANGE
+        _mockWordValidator.Validate("cab")
+            .Returns(new WordValidationResult(true, ""));
+        _mockWordValidator.Validate("aid")
+            .Returns(new WordValidationResult(true, ""));
+        _mockWordValidator.Validate("doe")
+            .Returns(new WordValidationResult(true, ""));
+        //  C A B
+        //    I
+        //    D O E
+        _mockBoardService.BoardState.Returns(
+            new Dictionary<(int x, int y), Card>()
+            {
+                {(x: 0, y: 0), cardC},
+                {(x: 1, y: 0), cardA},
+                {(x: 2, y: 0), cardB},
+                
+                {(x: 1, y: 1), cardI},
+                
+                {(x: 1, y: 2), cardD},
+                {(x: 2, y: 2), cardO},
+                {(x: 3, y: 2), cardE},
+            } );
+        ConstructVM();
+        _cut = Render(@<GameBoard/>);
+        
+        _cut.Find("#play-cards-btn").Click();
+        
+        // 'a' is not success because failure 'overrides' success
+        ExpectCardHighlights([
+            cardC.Id, cardA.Id, cardB.Id,
+            cardI.Id,
+            cardD.Id, cardO.Id, cardE.Id], 
+            CardHighlight.Success);
+    }
+    
+    [Test]
+    public void PlayCardsBtnClicked__MultipleVertical_OneHorizontal_AllValid__ExpectedSuccessHighlight()
+    {
+        // ARRANGE
+        _mockWordValidator.Validate("cab")
+            .Returns(new WordValidationResult(true, ""));
+        _mockWordValidator.Validate("aid")
+            .Returns(new WordValidationResult(true, ""));
+        _mockWordValidator.Validate("doe")
+            .Returns(new WordValidationResult(true, ""));
+        //  C 
+        //  A I D
+        //  B   O
+        //      E
+        _mockBoardService.BoardState.Returns(
+            new Dictionary<(int x, int y), Card>()
+            {
+                {(x: 0, y: 0), cardC},
+                {(x: 0, y: 1), cardA},
+                {(x: 0, y: 2), cardB},
+                
+                {(x: 1, y: 1), cardI},
+
+                {(x: 2, y: 1), cardD},
+                {(x: 2, y: 2), cardO},
+                {(x: 2, y: 3), cardE},
+            } );
+        ConstructVM();
+        _cut = Render(@<GameBoard/>);
+        
+        _cut.Find("#play-cards-btn").Click();
+        
+        // 'a' is not success because failure 'overrides' success
+        ExpectCardHighlights([
+                cardC.Id, cardA.Id, cardB.Id,
+                cardI.Id,
+                cardD.Id, cardO.Id, cardE.Id], 
+            CardHighlight.Success);
+    }
+    
+    
+    [Test]
+    public void PlayCardsBtnClicked__ValidTurn__ExpectedPointIncrease()
+    {
+        _mockWordValidator.Validate("bad")
+            .Returns(new WordValidationResult(true, ""));
+        _mockWordValidator.Validate("ace")
+            .Returns(new WordValidationResult(true, ""));
+        _mockBoardService.BoardState.Returns(
+            new Dictionary<(int x, int y), Card>()
+            {
+                {(x: 0, y: 0), cardB},
+                {(x: 1, y: 0), cardA},
+                {(x: 2, y: 0), cardD},
+                
+                {(x: 1, y: 1), cardC},
+                {(x: 1, y: 2), cardE},
+            } );
+        ConstructVM();
+        _cut = Render(@<GameBoard/>);
+        
+        _cut.Find("#play-cards-btn").Click();
+        // 6 (bed) + 5 (ace) = 11
+        _cut.Find("#points-view")
+            .ToMarkup().Should().Contain("11");
+    }
+    
+    [Test]
+    public void PlayCardsBtnClicked__InvalidTurn__NoPointIncrease()
+    {
+        _mockWordValidator.Validate("bad")
+            .Returns(new WordValidationResult(true, ""));
+        _mockWordValidator.Validate("ace")
+            .Returns(new WordValidationResult(false, ""));
+        _mockBoardService.BoardState.Returns(
+            new Dictionary<(int x, int y), Card>()
+            {
+                {(x: 0, y: 0), cardB},
+                {(x: 1, y: 0), cardA},
+                {(x: 2, y: 0), cardD},
+                
+                {(x: 1, y: 1), cardC},
+                {(x: 1, y: 2), cardE},
+            } );
+        ConstructVM();
+        _cut = Render(@<GameBoard/>);
+        
+        _cut.Find("#play-cards-btn").Click();
+        // 6 (bed) + 5 (ace) = 11
+        _cut.Find("#points-view")
+            .ToMarkup().Should().Contain("0");
+    }
+    
+    [Test]
+    public void CardMousedOver__OnValidatedWord__ShowsDefinition()
+    {
+        var definition = "mock definition";
+        _mockWordValidator.Validate("bad")
+            .Returns(new WordValidationResult(true, definition));
+        _mockBoardService.BoardState.Returns(
+            new Dictionary<(int x, int y), Card>()
+            {
+                {(x: 0, y: 0), cardB},
+                {(x: 1, y: 0), cardA},
+                {(x: 2, y: 0), cardD},
+            } );
+        ConstructVM();
+        _cut = Render(@<GameBoard/>);
+        _cut.Find("#play-cards-btn").Click();
+
+        _cut.Find($"#card-{cardA.Id}").MouseOver();
+        
+        var def = _cut.Find("#word-definition-view");
+        def.ToMarkup().Should().Contain("mock definition");
+    }
+    
+    
 }

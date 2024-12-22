@@ -7,6 +7,9 @@ namespace P1.Services;
 
 public interface IGameBoardViewModel
 {
+    int TurnPoints { get; set; }
+    TurnState TurnState { get; set; }
+    
     IEnumerable<(int x, int y)> BoardDropZonePositions { get; }
     List<CardVM> Cards { get; }
 
@@ -16,7 +19,7 @@ public interface IGameBoardViewModel
     bool CanCardBeMovedToHand(CardVM card);
     
     void MoveCard(CardVM cardVm, CardPlace moveToPlace);
-    void PlayCards();
+    Task PlayCards();
 
 }
 
@@ -25,34 +28,44 @@ public class GameBoardViewModel : IGameBoardViewModel
 {
     private IBoardService _boardService;
     private IHandService _handService;
-    private IWordValidator _wordValidator;
+    private IPlayCardsService _playCardsService;
+
+    public int TurnPoints { get; set; } = 0;
+    public TurnState TurnState { get; set; } = TurnState.PLAYING;
     
     public GameBoardViewModel(
         IBoardService boardService, 
         IHandService handService,
-        IWordValidator wordValidator)
+        IPlayCardsService playCardsService)
     {
         _boardService = boardService;
         _handService = handService;
-        _wordValidator = wordValidator;
+        _playCardsService = playCardsService;
 
+        // initialize cardVMs if model already has state
         foreach (Card card in handService.Cards)
-            _cardVmDict.Add(card.Id, new CardVM(card, new CardPlace() { IsHand = true }));
+            _cardVmDict.Add(card.Id, new CardVM(card, new CardPlace(true, null)));
+        
+        foreach (var kv in boardService.BoardState)
+            _cardVmDict.Add(kv.Value.Id, 
+                new CardVM(kv.Value, new CardPlace(false, kv.Key)));
     }
+    
 
     private Dictionary<int, CardVM> _cardVmDict = new();
     public List<CardVM> Cards => _cardVmDict.Values.ToList();
 
     public int NumCardsOnBoard =>
-        _boardService.Cards.Count();
+        _boardService.BoardState.Count();
+    
 
     public IEnumerable<(int x, int y)> BoardDropZonePositions =>
-        _boardService.Cards.Count == 0 ? 
+        _boardService.BoardState.Count == 0 ? 
             [(0, 0)] 
-            : _boardService.Cards.Keys.Concat(_boardService.GetCardAdjacentPositions()).Distinct();
+            : _boardService.BoardState.Keys.Concat(_boardService.GetCardAdjacentPositions()).Distinct();
     
     public bool IsCardAtPosition((int x, int y) pos) =>
-        _boardService.Cards.ContainsKey(pos);
+        _boardService.BoardState.ContainsKey(pos);
 
     public bool CanCardBeMovedToBoardPos(CardVM card, (int x, int y) destPos)
     {
@@ -61,22 +74,23 @@ public class GameBoardViewModel : IGameBoardViewModel
         
         // a single card should not be able to be moved adjacent to itself
         // even if this wouldn't technically break the board
-        if (_boardService.Cards.Count == 1)
+        if (_boardService.BoardState.Count == 1)
             return false;
         
-        return _boardService.WouldCardBreakBoardIfMoved(card.Place.BoardPos.Value, destPos);
+        return !_boardService.WouldCardBreakBoardIfMoved(card.Place.BoardPos.Value, destPos);
     }
     
     public bool CanCardBeMovedToHand(CardVM card)
     {
+        
         if (card.Place.IsHand)
             return true;
         
         var cardPos = card.Place.BoardPos.Value;
         // a single card can move to hand
-        if (_boardService.Cards.Count == 1)
+        if (_boardService.BoardState.Count == 1)
             return true;
-        return _boardService.WouldCardBreakBoardIfGone(cardPos);
+        return !_boardService.WouldCardBreakBoardIfGone(cardPos);
     }
 
     public void MoveCard(CardVM cardVm, CardPlace moveToPlace)
@@ -100,15 +114,42 @@ public class GameBoardViewModel : IGameBoardViewModel
         _cardVmDict[cardVm.Id].Place = moveToPlace;
     }
     
-    public void PlayCards()
+    public async Task PlayCards()
     {
-        foreach (var card in Cards.Where(c => !c.Place.IsHand))
+        var playCardsResult = await _playCardsService.GetPlayCardsResult(_boardService.BoardState);
+        foreach (var cardLineResult in playCardsResult.CardLineResults)
+            foreach (var id in cardLineResult.CardIds)
+            {
+                _cardVmDict[id].Highlight = cardLineResult.IsValid 
+                    ? CardHighlight.Success 
+                    : CardHighlight.Failure;
+
+                _cardVmDict[id].HoverText = cardLineResult.Definition;
+            }
+
+
+        if (playCardsResult.IsTurnValid)
         {
-            card.Highlight = CardHighlight.Success;
+            TurnPoints += playCardsResult.PointsTotal;
+            TurnState = TurnState.REVIEWING_RESULTS_VALID;
+        }
+        else
+        {
+            TurnState = TurnState.REVIEWING_RESULTS_INVALID;
         }
     }
 
+
+
 }
+
+public enum TurnState
+{
+    PLAYING,
+    REVIEWING_RESULTS_VALID,
+    REVIEWING_RESULTS_INVALID
+}
+
 
 public class CardVM
 {
@@ -122,6 +163,7 @@ public class CardVM
         if (card is LetterCard letterCard)
         {
 
+            Superscript = letterCard.Points.ToString();
             Text = letterCard.Letter.ToString();
             Place = place;
             Id = letterCard.Id;
@@ -135,29 +177,38 @@ public class CardVM
     public int Id { get; set; }
     public string Name { get; set; }
     public string Text { get; set; }
+    public string? Superscript { get; set; }
     public CardPlace Place { get; set; }
     public CardHighlight Highlight { get; set; } = CardHighlight.None;
+    public string? HoverText { get; set; }
 }
 
 public class CardPlace
 {
-    public bool IsHand { get; set; }
-    public (int x, int y)? BoardPos { get; set; }
     
     public CardPlace() {}
-
-    public CardPlace(string dropzoneRep)
+    
+    public CardPlace(bool isHand, (int x, int y)? boardPos)
     {
-        if (dropzoneRep == "hand")
-            IsHand = true;
-        else
-        {
-            IsHand = false;
-            var match = Regex.Match(dropzoneRep, @"^board-\((-?\d+),(-?\d+)\)$");
-            var pos = (int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value));
-            BoardPos = pos;
-        }
+        IsHand = isHand;
+        BoardPos = boardPos;
     }
+    
+    public CardPlace(string dropzoneRep)
+        {
+            if (dropzoneRep == "hand")
+                IsHand = true;
+            else
+            {
+                IsHand = false;
+                var match = Regex.Match(dropzoneRep, @"^board-\((-?\d+),(-?\d+)\)$");
+                var pos = (int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value));
+                BoardPos = pos;
+            }
+        }
+    
+    public bool IsHand { get; set; }
+    public (int x, int y)? BoardPos { get; set; }
 
     public override string ToString()
     {
@@ -176,3 +227,5 @@ public enum CardHighlight
     Failure,
     None
 }
+
+

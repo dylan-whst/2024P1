@@ -9,12 +9,15 @@
 <div class="d-flex">
     <div style="width: 250px" class="info-panel ma-0 rounded-3">
         <MudText Typo="Typo.h4" ID="points-view" Class="ma-3 d-flex" Style="color: goldenrod">
-            <strong>$@_viewModel.TurnPoints</strong>
+            <strong>Turn: @_viewModel.Turn</strong>
 
+        </MudText>
+        <MudText Typo="Typo.h4" ID="points-view" Class="ma-3 d-flex">
+            <strong>Points: @_viewModel.TurnPoints</strong>
         </MudText>
         @if (_cardMousedOver != null)
         {
-            <MudText  ID="word-definition-view" Class="ma-5" Typo="Typo.h6">@_cardMousedOver.HoverText</MudText>
+            <MudText ID="word-definition-view" Class="ma-5" Typo="Typo.h6">@_cardMousedOver.HoverText</MudText>
 
         }
     </div>
@@ -56,7 +59,7 @@
                             <MudButton ID='play-cards-btn'
                                        Size="Size.Large" Color="Color.Success" Variant="Variant.Filled" Style="height: 80px; width:  140px"
                                        Disabled="_viewModel.NumCardsOnBoard == 0"
-                                       OnClick="_viewModel.PlayCards">
+                                       OnClick="_viewModel.OnPlayCards">
                                 <MudText Typo="Typo.h5">
                                     <strong>Play</strong>
                                 </MudText>
@@ -64,7 +67,8 @@
                         } else if (_viewModel.TurnState == TurnState.REVIEWING_RESULTS_VALID)
                         {
                             <MudButton ID='next-turn-btn'
-                                       Size="Size.Large"Variant="Variant.Filled" Style="height: 80px; width:  140px">
+                                       Size="Size.Large"Variant="Variant.Filled" Style="height: 80px; width:  140px"
+                                       OnClick="_viewModel.OnNextTurn">
                                 <MudText Typo="Typo.h5">
                                     <strong>Next Turn</strong>
                                 </MudText>
@@ -72,7 +76,8 @@
                         } else if (_viewModel.TurnState == TurnState.REVIEWING_RESULTS_INVALID)
                         {
                             <MudButton ID='try-again-btn'
-                                       Size="Size.Large"Variant="Variant.Filled" Style="height: 80px; width:  140px">
+                                       Size="Size.Large"Variant="Variant.Filled" Style="height: 80px; width:  140px"
+                                       OnClick="_viewModel.OnBackFromResultsView">
                                 <MudText Typo="Typo.h5">
                                     <strong>Try Again</strong>
                                 </MudText>

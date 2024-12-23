@@ -1,0 +1,215 @@
+
+@using _2024P1.Game
+@using AngleSharp.Dom
+@using FluentAssertions
+@using MudBlazor
+@using MudBlazor.Services
+@using NSubstitute
+@using NUnit.Framework
+@using P1.Models
+@using P1.Services
+@inherits GameBoardTestBase
+
+
+Tests for what happens with the view in the 'review state' after playing a valid or invalid board
+
+
+@code {
+    private IGameBoardViewModel _gameBoardViewModel;
+    private IBoardService _mockBoardService = Substitute.For<IBoardService>();
+    private IHandService _mockHandService = Substitute.For<IHandService>();
+    private IPlayCardsService _mockPlayCardsService = Substitute.For<IPlayCardsService>();
+
+    [SetUp]
+    public void SetUp()
+    {
+        _mockHandService.Cards.Returns(new List<Card>());
+        
+        _mockBoardService.BoardState.Returns(_mockBoardState);
+        _mockHandService.Cards.Returns([]);
+        
+        Services.AddScoped(_ => _gameBoardViewModel);
+        Services.AddMudServices();
+        JSInterop.Mode = JSRuntimeMode.Loose;
+    }
+    
+    private Dictionary<(int x, int y), Card> _mockBoardState => new Dictionary<(int x, int y), Card>()
+    {
+        { (x: 0, y: 0), new LetterCard { Id = 1, Letter = 'a', Points = 1} },
+        { (x: 1, y: 0), new LetterCard { Id = 2, Letter = 'b', Points = 1} },
+        { (x: 2, y: 0), new LetterCard { Id = 3, Letter = 'c', Points = 1} },
+        { (x: 3, y: 0), new LetterCard { Id = 4, Letter = 'd', Points = 1} },
+    };
+
+    private PlayCardsResult _mockValidPlayResult = new()
+    {
+        IsTurnValid = true,
+        PointsTotal = 4,
+        CardLineResults =
+        [
+            new CardLineResult()
+            {
+                PointsTotal = 4,
+                Definition = "definition",
+                Word = "abcd",
+                CardIds = [1, 2, 3, 4],
+                IsValid = true
+            }
+        ]
+    };
+    
+    private PlayCardsResult _mockInvalidPlayResult = new()
+    {
+        IsTurnValid = false,
+        PointsTotal = 0,
+        CardLineResults =
+        [
+            new CardLineResult()
+            {
+                PointsTotal = 0,
+                Definition = null,
+                Word = null,
+                CardIds = [1, 2, 3, 4],
+                IsValid = false
+            }
+        ]
+    };
+
+    private void ConstructVM()
+    {
+        _gameBoardViewModel = new GameBoardViewModel(
+            _mockBoardService,
+            _mockHandService,
+            _mockPlayCardsService
+        );
+    }
+
+    [Test]
+    public void Initially__NoError()
+    {
+        
+    }
+
+    [Test]
+    public void PlayCardsClicked__ValidTurn__NextTurnButtonAppears()
+    {
+        _mockPlayCardsService.GetPlayCardsResult(Arg.Any<Dictionary<(int x, int y), Card>>())
+            .Returns(_mockValidPlayResult);
+        ConstructVM();
+        _cut = Render(@<GameBoard/>);
+
+        _cut.Find("#play-cards-btn").Click();
+
+        _cut.Find("#next-turn-btn");
+    }
+    
+    [Test]
+    public void PlayCardsClicked__InvalidTurn__TryAgainButtonAppears()
+    {
+        _mockPlayCardsService.GetPlayCardsResult(Arg.Any<Dictionary<(int x, int y), Card>>())
+            .Returns(_mockInvalidPlayResult);
+        ConstructVM();
+        _cut = Render(@<GameBoard/>);
+
+        _cut.Find("#play-cards-btn").Click();
+
+        _cut.Find("#try-again-btn");
+    }
+    
+    [Test]
+    public void PlayCardsClicked__ValidTurn__DraggingCardDoesntMoveIt()
+    {
+        _mockPlayCardsService.GetPlayCardsResult(Arg.Any<Dictionary<(int x, int y), Card>>())
+            .Returns(_mockValidPlayResult);
+        _mockBoardService.WouldCardBreakBoardIfGone(Arg.Any<(int x, int y)>()).Returns(false);
+        _mockBoardService.GetDropZonePositions().Returns([(x: 0, y: 0), (x: 1, y: 0), (x: 2, y: 0), (x: 3, y: 0), (x: 4, y: 0)]);
+        ConstructVM();
+        _cut = Render(@<GameBoard/>);
+
+        _cut.Find("#play-cards-btn").Click();
+        
+        DragCardToContainer(1, "hand");
+        _mockHandService.DidNotReceiveWithAnyArgs().Add(default);
+        DragCardToContainer(1, BoardStr(4, 0));
+        _mockHandService.DidNotReceiveWithAnyArgs().Add(default);
+    }
+    
+    [Test]
+    public void TryAgainClicked__CardViewsStateIsRefreshed()
+    {
+        _mockPlayCardsService.GetPlayCardsResult(Arg.Any<Dictionary<(int x, int y), Card>>())
+            .Returns(_mockInvalidPlayResult);
+        ConstructVM();
+        _cut = Render(@<GameBoard/>);
+        _cut.Find("#play-cards-btn").Click();
+
+        _cut.Find("#try-again-btn").Click();
+
+        _gameBoardViewModel.Cards.Should().AllSatisfy(c =>
+        {
+            c.Highlight.Should().NotBe(CardHighlight.Success);
+            c.HoverText.Should().BeNull();
+        });
+    }
+    
+    
+    [Test]
+    public void TryAgainClicked__PlayButtonVisible()
+    {
+        _mockPlayCardsService.GetPlayCardsResult(Arg.Any<Dictionary<(int x, int y), Card>>())
+            .Returns(_mockInvalidPlayResult);
+        ConstructVM();
+        _cut = Render(@<GameBoard/>);
+        _cut.Find("#play-cards-btn").Click();
+
+        _cut.Find("#try-again-btn").Click();
+
+        _cut.Find("#play-cards-btn");
+    }
+    
+    [Test]
+    public void NextTurnClicked__PlayButtonVisible()
+    {
+        _mockPlayCardsService.GetPlayCardsResult(Arg.Any<Dictionary<(int x, int y), Card>>())
+            .Returns(_mockValidPlayResult);
+        ConstructVM();
+        _cut = Render(@<GameBoard/>);
+        _cut.Find("#play-cards-btn").Click();
+
+        _cut.Find("#next-turn-btn").Click();
+
+        _cut.Find("#play-cards-btn");
+    }
+    
+    [Test]
+    public void NextTurnClicked__CardViewsRefreshed()
+    {
+        _mockPlayCardsService.GetPlayCardsResult(Arg.Any<Dictionary<(int x, int y), Card>>())
+            .Returns(_mockValidPlayResult);
+        ConstructVM();
+        _cut = Render(@<GameBoard/>);
+        _cut.Find("#play-cards-btn").Click();
+
+        _cut.Find("#next-turn-btn").Click();
+
+        _gameBoardViewModel.Cards.Should().AllSatisfy(c =>
+        {
+            c.Highlight.Should().NotBe(CardHighlight.Success);
+            c.HoverText.Should().BeNull();
+        });
+    }
+    
+    [Test]
+    public void NextTurnClicked__TurnCounterIncremented()
+    {
+        _mockPlayCardsService.GetPlayCardsResult(Arg.Any<Dictionary<(int x, int y), Card>>())
+            .Returns(_mockValidPlayResult);
+        ConstructVM();
+        _cut = Render(@<GameBoard/>);
+        _cut.Find("#play-cards-btn").Click();
+
+        _cut.Find("#next-turn-btn").Click();
+
+        _gameBoardViewModel.Turn.Should().Be(1);
+    }
+}

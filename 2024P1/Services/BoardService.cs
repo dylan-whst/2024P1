@@ -10,6 +10,7 @@ public interface IBoardService
     Card Remove((int x, int y) position);
     public bool WouldCardBreakBoardIfGone((int x, int y) pos);
     bool WouldCardBreakBoardIfMoved((int x, int y) cardPos, (int x, int y) destPos);
+    IEnumerable<(int x, int y)> GetDropZonePositions();
 }
 
 public class BoardService: IBoardService
@@ -54,6 +55,11 @@ public class BoardService: IBoardService
         return IsHypotheticalBoardBroken(tempCardsCopy);
     }
 
+    public IEnumerable<(int x, int y)> GetDropZonePositions() =>
+        BoardState.Count == 0 ? 
+            [(0, 0)] 
+            : BoardState.Keys.Concat(GetCardAdjacentPositions()).Distinct();
+    
     /// <summary>
     /// Broken means that not every card is connected adjacently as a single unit
     /// </summary>

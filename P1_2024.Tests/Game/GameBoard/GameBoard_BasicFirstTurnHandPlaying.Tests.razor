@@ -328,6 +328,7 @@ after playing basic letter cards on an empty board.
                 {(x: 1, y: 0), cardA},
                 {(x: 2, y: 0), cardD},
             } );
+        _mockBoardService.GetDropZonePositions().Returns([(x: 0, y: 0), (x: 1, y: 0), (x: 2, y: 0)]);
         ConstructVM();
         _cut = Render(@<GameBoard/>);
         _cut.Find("#play-cards-btn").Click();

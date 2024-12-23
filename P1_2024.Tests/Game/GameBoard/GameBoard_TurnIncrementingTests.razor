@@ -1,0 +1,90 @@
+
+@using _2024P1.Game
+@using AngleSharp.Dom
+@using FluentAssertions
+@using MudBlazor
+@using MudBlazor.Services
+@using NSubstitute
+@using NUnit.Framework
+@using P1.Models
+@using P1.Services
+@inherits GameBoardTestBase
+
+
+Tests for after a valid turn is reviewed and 'next turn' is clicked for any number of times.
+This also involves testing the hand/deck service interplay when drawing cards. 
+
+
+@code {
+    private IGameBoardViewModel _gameBoardViewModel;
+    private IBoardService _mockBoardService = Substitute.For<IBoardService>();
+    private IPlayCardsService _mockPlayCardsService = Substitute.For<IPlayCardsService>();
+    private IHandService _handService;
+
+
+    [SetUp]
+    public void SetUp()
+    {
+        _handService = new HandService([]);
+        
+        _mockBoardService.BoardState.Returns(_mockBoardState);
+        
+        Services.AddScoped(_ => _gameBoardViewModel);
+        Services.AddMudServices();
+        JSInterop.Mode = JSRuntimeMode.Loose;
+    }
+    
+    private Dictionary<(int x, int y), Card> _mockBoardState => new Dictionary<(int x, int y), Card>()
+    {
+        { (x: 0, y: 0), new LetterCard { Id = 1, Letter = 'a', Points = 1} },
+        { (x: 1, y: 0), new LetterCard { Id = 2, Letter = 'b', Points = 1} },
+        { (x: 2, y: 0), new LetterCard { Id = 3, Letter = 'c', Points = 1} },
+        { (x: 3, y: 0), new LetterCard { Id = 4, Letter = 'd', Points = 1} },
+    };
+
+    private PlayCardsResult _mockValidPlayResult = new()
+    {
+        IsTurnValid = true,
+        PointsTotal = 4,
+        CardLineResults =
+        [
+            new CardLineResult()
+            {
+                PointsTotal = 4,
+                Definition = "definition",
+                Word = "abcd",
+                CardIds = [1, 2, 3, 4],
+                IsValid = true
+            }
+        ]
+    };
+
+    private void ConstructVM()
+    {
+        _gameBoardViewModel = new GameBoardViewModel(
+            _mockBoardService,
+            _handService,
+            _mockPlayCardsService
+        );
+    }
+
+    [Test]
+    public void Initially__NoError()
+    {
+        
+    }
+    
+    [Test]
+    public void NextTurnClicked__EmptyHand__HandIsFilledWithTopOfDeck()
+    {
+        _mockPlayCardsService.GetPlayCardsResult(Arg.Any<Dictionary<(int x, int y), Card>>())
+            .Returns(_mockValidPlayResult); 
+        ConstructVM();
+        _cut = Render(@<GameBoard/>);
+        _cut.Find("#play-cards-btn").Click();
+
+        _cut.Find("#next-turn-btn").Click();
+
+        _gameBoardViewModel.Turn.Should().Be(1);
+    }
+}

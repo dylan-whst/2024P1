@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using _2024P1.Game;
+using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
 using P1.Models;
 
@@ -14,13 +15,16 @@ public interface IGameBoardViewModel
     List<CardVM> Cards { get; }
 
     int NumCardsOnBoard { get; }
+    int Turn { get; set; }
     bool IsCardAtPosition((int x, int y) pos);
     bool CanCardBeMovedToBoardPos(CardVM card, (int x, int y) destPos);
     bool CanCardBeMovedToHand(CardVM card);
     
     void MoveCard(CardVM cardVm, CardPlace moveToPlace);
-    Task PlayCards();
+    Task OnPlayCards();
 
+    void OnBackFromResultsView();
+    void OnNextTurn();
 }
 
 
@@ -30,6 +34,7 @@ public class GameBoardViewModel : IGameBoardViewModel
     private IHandService _handService;
     private IPlayCardsService _playCardsService;
 
+    public int Turn { get; set; } = 0;
     public int TurnPoints { get; set; } = 0;
     public TurnState TurnState { get; set; } = TurnState.PLAYING;
     
@@ -56,13 +61,10 @@ public class GameBoardViewModel : IGameBoardViewModel
     public List<CardVM> Cards => _cardVmDict.Values.ToList();
 
     public int NumCardsOnBoard =>
-        _boardService.BoardState.Count();
+        _boardService.BoardState.Count;
     
 
-    public IEnumerable<(int x, int y)> BoardDropZonePositions =>
-        _boardService.BoardState.Count == 0 ? 
-            [(0, 0)] 
-            : _boardService.BoardState.Keys.Concat(_boardService.GetCardAdjacentPositions()).Distinct();
+    public IEnumerable<(int x, int y)> BoardDropZonePositions => _boardService.GetDropZonePositions();
     
     public bool IsCardAtPosition((int x, int y) pos) =>
         _boardService.BoardState.ContainsKey(pos);
@@ -71,6 +73,8 @@ public class GameBoardViewModel : IGameBoardViewModel
     {
         if (card.Place.IsHand)
             return true;
+        if (TurnState != TurnState.PLAYING)
+            return false;
         
         // a single card should not be able to be moved adjacent to itself
         // even if this wouldn't technically break the board
@@ -85,9 +89,11 @@ public class GameBoardViewModel : IGameBoardViewModel
         
         if (card.Place.IsHand)
             return true;
+        if (TurnState != TurnState.PLAYING)
+            return false;
         
         var cardPos = card.Place.BoardPos.Value;
-        // a single card can move to hand
+        // a single card can always be moved to hand
         if (_boardService.BoardState.Count == 1)
             return true;
         return !_boardService.WouldCardBreakBoardIfGone(cardPos);
@@ -114,7 +120,7 @@ public class GameBoardViewModel : IGameBoardViewModel
         _cardVmDict[cardVm.Id].Place = moveToPlace;
     }
     
-    public async Task PlayCards()
+    public async Task OnPlayCards()
     {
         var playCardsResult = await _playCardsService.GetPlayCardsResult(_boardService.BoardState);
         foreach (var cardLineResult in playCardsResult.CardLineResults)
@@ -139,8 +145,27 @@ public class GameBoardViewModel : IGameBoardViewModel
         }
     }
 
+    public void OnBackFromResultsView()
+    {
+        ResetCardViews();
+        TurnState = TurnState.PLAYING;
+    }
 
+    public void OnNextTurn()
+    {
+        ResetCardViews();
+        TurnState = TurnState.PLAYING;
+        Turn++;
+    }
 
+    private void ResetCardViews()
+    {
+        foreach (var card in Cards)
+        {
+            card.Highlight = CardHighlight.None;
+            card.HoverText = null;
+        }
+    }
 }
 
 public enum TurnState

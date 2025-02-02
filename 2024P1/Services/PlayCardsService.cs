@@ -9,6 +9,8 @@ public interface IPlayCardsService
 
 public class PlayCardsService: IPlayCardsService
 {
+    private static List<List<int>> PlayedWordHistory { get; set; } = [];
+    
     private readonly IWordValidator _wordValidator;
 
     public PlayCardsService(IWordValidator wordValidator)
@@ -62,21 +64,40 @@ public class PlayCardsService: IPlayCardsService
     private async Task<CardLineResult> GetCardLineResult(List<Card> cardLine)
     {
         var cardsLinePoints = cardLine.OfType<LetterCard>().Select(c => c.Points).Sum();
+        var cardIds = cardLine.Select(c => c.Id).ToList();
         var cardsLineWord = String.Join(
             "", 
             cardLine
                 .OfType<LetterCard>() // for now assume all cards to be letter cards
                 .Select(c => c.Letter));
-                    
+
+        bool isAlreadyPlayed;
+        if (HasPlayedWord(cardIds))
+        {
+            isAlreadyPlayed = true;
+        }
+        else
+        {
+            isAlreadyPlayed = false;
+            PlayedWordHistory.Add(cardIds);
+        }
+        
         WordValidationResult validationResult = await _wordValidator.Validate(cardsLineWord);
         
         return new() {
             Word = validationResult.IsValid ? cardsLineWord : null,
             Definition = validationResult.IsValid ? validationResult.Definition : null,
-            PointsTotal = cardsLinePoints,
-            CardIds = cardLine.Select(c => c.Id).ToList(),
-            IsValid = validationResult.IsValid
+            PointsTotal = isAlreadyPlayed ? 0 : cardsLinePoints,
+            CardIds = cardIds,
+            IsValid = validationResult.IsValid,
+            IsAlreadyPlayed = isAlreadyPlayed
         };
+    }
+    
+    private bool HasPlayedWord(List<int> cardIds)
+    {
+        return PlayedWordHistory.Any(history =>
+            history.Count == cardIds.Count && !history.Except(cardIds).Any());
     }
     
     /// <summary>
@@ -131,6 +152,7 @@ public class PlayCardsResult
 public class CardLineResult
 {
     public List<int> CardIds { get; set; } = new();
+    public bool IsAlreadyPlayed { get; set; }
     public bool IsValid { get; set; }
     public int PointsTotal { get; set; } = 0;
     public string? Word;

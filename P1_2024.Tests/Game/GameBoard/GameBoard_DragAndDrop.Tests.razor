@@ -27,9 +27,14 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
     [SetUp]
     public void SetUp()
     {
+        var handService = new HandService(MockHand);
+        handService.HandSize = 4;
+            
+        
         _gameBoardViewModel = new GameBoardViewModel(
             new BoardService(),
-            new HandService(MockHand),
+            handService,
+            Substitute.For<IDeckService>(),
             Substitute.For<IPlayCardsService>()
         );
         

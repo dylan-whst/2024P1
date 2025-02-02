@@ -8,7 +8,7 @@
 
 <div class="d-flex">
     <div style="width: 250px" class="info-panel ma-0 rounded-3">
-        <MudText Typo="Typo.h4" ID="points-view" Class="ma-3 d-flex" Style="color: goldenrod">
+        <MudText Typo="Typo.h4" ID="turn-view" Class="ma-3 d-flex" Style="color: steelblue">
             <strong>Turn: @_viewModel.Turn</strong>
 
         </MudText>
@@ -126,6 +126,10 @@
     .card-highlight-failure {
         background-color: #ffc5bc;
     }
+
+    .card-highlight-cemented {
+        background-color: lightgray;
+    }
     
     .info-panel {
         background-color: var(--mud-palette-action-default-hover);
@@ -203,6 +207,7 @@
         contextHighlight switch {
             CardHighlight.Success => "card-highlight-success",
             CardHighlight.Failure => "card-highlight-failure",
+            CardHighlight.Cemented => "card-highlight-cemented",
             CardHighlight.None => "card-highlight-none",
             _ => throw new ArgumentOutOfRangeException(nameof(contextHighlight), contextHighlight, null)
         };

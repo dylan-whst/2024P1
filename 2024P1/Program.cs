@@ -17,14 +17,9 @@ builder.Services.AddScoped<IGameService, StubGameService>();
 builder.Services.AddScoped<IBoardService, BoardService>();
 builder.Services.AddScoped<IWordValidator, DictionaryApiWordValidator>();
 builder.Services.AddScoped<IPlayCardsService, PlayCardsService>();
-builder.Services.AddScoped<IHandService, HandService>(_ => 
-    new HandService(
-        Enumerable.Range('a', 7).Select((c, index) => (Card)new LetterCard()
-        {
-            Id = index + 1,
-            Letter = (char)c,
-            Points = index
-        }).ToList()
-    ));
+builder.Services.AddScoped<IDeckService, DeckService>();
+var handService = new HandService([]);
+handService.HandSize = 7;
+builder.Services.AddScoped<IHandService, HandService>(_ => handService);
 
 await builder.Build().RunAsync();

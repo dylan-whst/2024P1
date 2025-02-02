@@ -11,10 +11,16 @@ public interface IBoardService
     public bool WouldCardBreakBoardIfGone((int x, int y) pos);
     bool WouldCardBreakBoardIfMoved((int x, int y) cardPos, (int x, int y) destPos);
     IEnumerable<(int x, int y)> GetDropZonePositions();
+    
 }
 
 public class BoardService: IBoardService
 {
+    public BoardService(Dictionary<(int x, int y), Card> boardState)
+    {
+        BoardState = new(boardState);
+    }
+    
     public BoardService()
     {
         BoardState = new();

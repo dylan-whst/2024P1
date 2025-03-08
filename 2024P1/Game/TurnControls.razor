@@ -1,0 +1,33 @@
+@using P1.Services
+@using MudBlazor
+@inherits ViewModelComponentBase
+
+@if (_viewModel.TurnState == TurnState.PLAYING)
+{
+    <MudButton ID='play-cards-btn'
+               Size="Size.Large" Color="Color.Success" Variant="Variant.Filled" Style="height: 80px; width:  140px"
+               Disabled="_viewModel.NumCardsOnBoard == 0"
+               OnClick="_viewModel.OnPlayCards">
+        <MudText Typo="Typo.h5">
+            <strong>Play</strong>
+        </MudText>
+    </MudButton>
+} else if (_viewModel.TurnState == TurnState.REVIEWING_RESULTS_VALID)
+{
+    <MudButton ID='next-turn-btn'
+               Size="Size.Large"Variant="Variant.Filled" Style="height: 80px; width:  140px"
+               OnClick="_viewModel.OnNextTurn">
+        <MudText Typo="Typo.h5">
+            <strong>Next Turn</strong>
+        </MudText>
+    </MudButton>
+} else if (_viewModel.TurnState == TurnState.REVIEWING_RESULTS_INVALID)
+{
+    <MudButton ID='try-again-btn'
+               Size="Size.Large"Variant="Variant.Filled" Style="height: 80px; width:  140px"
+               OnClick="_viewModel.OnBackFromResultsView">
+        <MudText Typo="Typo.h5">
+            <strong>Try Again</strong>
+        </MudText>
+    </MudButton>
+}

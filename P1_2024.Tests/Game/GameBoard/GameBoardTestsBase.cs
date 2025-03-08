@@ -7,7 +7,7 @@ public abstract class GameBoardTestBase : BunitTestContext
 {
     protected IRenderedFragment _cut;
     protected string BoardStr(int x, int y) => $"board-({x},{y})";
-
+    
     protected void CardShouldBeIn(int cardId, string container)
     {
         _cut.FindAll($"[identifier='{container}'] #card-{cardId}").Should().NotBeEmpty();

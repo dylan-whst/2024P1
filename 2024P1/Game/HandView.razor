@@ -1,0 +1,24 @@
+@using P1.Services
+@using MudBlazor
+@inherits ViewModelComponentBase
+
+<MudDropZone Class="hand-drop-zone m-5 rounded-lg d-flex flex-grow-1  flex-wrap " T="CardVM"
+             Identifier="hand"
+             CanDrop="@((card) => _viewModel.CanCardBeMovedToHand(card))"/>
+             
+<style>
+    .hand-drop-zone {
+        align-items: center;
+        justify-content: center;
+        min-width: 900px;
+        max-width: 900px;
+        min-height: 137px;
+        max-height: 137px;
+        display: flex
+    }
+
+    .hand-drop-zone .card {
+        margin: 7px;
+    }
+
+</style>

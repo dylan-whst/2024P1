@@ -11,7 +11,9 @@ public interface IBoardService
     public bool WouldCardBreakBoardIfGone((int x, int y) pos);
     bool WouldCardBreakBoardIfMoved((int x, int y) cardPos, (int x, int y) destPos);
     IEnumerable<(int x, int y)> GetDropZonePositions();
-    
+    int BoardSize { get; }
+    (int x, int y) BoardCenter { get; }
+
 }
 
 public class BoardService: IBoardService
@@ -25,6 +27,11 @@ public class BoardService: IBoardService
     {
         BoardState = new();
     }
+
+    public int BoardSize { get; set; } = 5;
+
+    public (int x, int y) BoardCenter =>
+        ((int)Math.Ceiling((double)BoardSize / 2), (int)Math.Ceiling((double)BoardSize / 2));
     public Dictionary<(int x, int y), Card> BoardState { get; private set; }
     public void Add(Card card, (int x, int y) pos)
     {
@@ -63,8 +70,21 @@ public class BoardService: IBoardService
 
     public IEnumerable<(int x, int y)> GetDropZonePositions() =>
         BoardState.Count == 0 ? 
-            [(0, 0)] 
-            : BoardState.Keys.Concat(GetCardAdjacentPositions()).Distinct();
+            GetEveryBoardPosition()
+            : BoardState.Keys.Concat(GetCardAdjacentPositions())
+                .Distinct()
+                .Where(pos => pos.x >= 0 && pos.x < BoardSize
+                          &&  pos.y >= 0 && pos.y < BoardSize);
+    
+
+    private IEnumerable<(int x, int y)>  GetEveryBoardPosition()
+    {
+        List<(int x, int y)> positions = [];
+        for (var x = 0; x < BoardSize; x++)
+            for (int y = 0; y < BoardSize; y++)
+                positions.Add((x, y));
+        return positions;
+    }
     
     /// <summary>
     /// Broken means that not every card is connected adjacently as a single unit

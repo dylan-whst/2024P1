@@ -11,20 +11,27 @@ public interface IGameBoardViewModel
     int TurnPoints { get; set; }
     TurnState TurnState { get; set; }
     
+    int BoardSize { get; }
+    (int x, int y) BoardCenter { get; }
+    
     IEnumerable<(int x, int y)> BoardDropZonePositions { get; }
     List<CardVM> Cards { get; }
 
     int NumCardsOnBoard { get; }
     int Turn { get; set; }
+    CardVM? CardMousedOver { get; set; }
+    
     bool IsCardAtPosition((int x, int y) pos);
-    bool CanCardBeMovedToBoardPos(CardVM card, (int x, int y) destPos);
     bool CanCardBeMovedToHand(CardVM card);
+    bool CanCardBeDroppedAt(CardVM card, (int x, int y) pos);
     
     void MoveCard(CardVM cardVm, CardPlace moveToPlace);
     Task OnPlayCards();
 
     void OnBackFromResultsView();
     void OnNextTurn();
+
+    event Action OnViewStateChanged;
 }
 
 
@@ -37,9 +44,26 @@ public class GameBoardViewModel : IGameBoardViewModel
 
 
     public int Turn { get; set; } = 0;
+    private CardVM? _cardMousedOver;
+    public CardVM? CardMousedOver
+    {
+        get => _cardMousedOver;
+        set
+        {
+            if (_cardMousedOver != value)
+            {
+                _cardMousedOver = value;
+                OnViewStateChanged.Invoke();
+            }
+        }
+    }
     public int TurnPoints { get; set; } = 0;
     public TurnState TurnState { get; set; } = TurnState.PLAYING;
+    public int BoardSize => _boardService.BoardSize;
+
+    public (int x, int y) BoardCenter => _boardService.BoardCenter;
     
+
     public GameBoardViewModel(
         IBoardService boardService, 
         IHandService handService,
@@ -72,8 +96,16 @@ public class GameBoardViewModel : IGameBoardViewModel
 
     public IEnumerable<(int x, int y)> BoardDropZonePositions => _boardService.GetDropZonePositions();
     
+    public event Action? OnViewStateChanged;
+    
     public bool IsCardAtPosition((int x, int y) pos) =>
         _boardService.BoardState.ContainsKey(pos);
+    
+    public bool CanCardBeDroppedAt(CardVM card, (int x, int y) pos)
+    {
+        return !IsCardAtPosition(pos)
+               && CanCardBeMovedToBoardPos(card, pos) ;
+    }
 
     public bool CanCardBeMovedToBoardPos(CardVM card, (int x, int y) destPos)
     {
@@ -128,6 +160,8 @@ public class GameBoardViewModel : IGameBoardViewModel
 
         // synchronize change that happened with the board with the model
         _cardVmDict[cardVm.Id].Place = moveToPlace;
+        
+        OnViewStateChanged.Invoke();
     }
     
     public async Task OnPlayCards()
@@ -136,7 +170,6 @@ public class GameBoardViewModel : IGameBoardViewModel
         foreach (var cardLineResult in playCardsResult.CardLineResults)
             foreach (var id in cardLineResult.CardIds)
             {
-
                 if (cardLineResult is { IsValid: true, IsAlreadyPlayed: false })
                     _cardVmDict[id].Highlight = CardHighlight.Success;
                 else if (cardLineResult is { IsValid: false, IsAlreadyPlayed: false })
@@ -158,12 +191,16 @@ public class GameBoardViewModel : IGameBoardViewModel
         {
             TurnState = TurnState.REVIEWING_RESULTS_INVALID;
         }
+        
+        OnViewStateChanged.Invoke();
     }
 
     public void OnBackFromResultsView()
     {
         ResetCardViews();
         TurnState = TurnState.PLAYING;
+        
+        OnViewStateChanged.Invoke();
     }
 
     public void OnNextTurn()
@@ -174,7 +211,10 @@ public class GameBoardViewModel : IGameBoardViewModel
         
         TurnState = TurnState.PLAYING;
         Turn++;
+        
+        OnViewStateChanged.Invoke();
     }
+
 
     private void DrawCards()
     {
@@ -208,10 +248,8 @@ public enum TurnState
 public class CardVM
 {
 
-    public CardVM()
-    {
-        
-    }
+    public CardVM() { }
+    
     public CardVM(Card card, CardPlace place)
     {
         if (card is LetterCard letterCard)

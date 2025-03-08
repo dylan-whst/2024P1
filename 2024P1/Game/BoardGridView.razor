@@ -1,0 +1,51 @@
+@using P1.Services
+@using MudBlazor
+
+@inherits ViewModelComponentBase
+
+<div class="board-grid" style="overflow:  scroll; background: #f4f1f1; border-radius: 13px">
+    @foreach (var (x, y) in _viewModel.BoardDropZonePositions)
+    {
+        // int gridColumn = x + _viewModel.BoardCenter.x + 1;
+        // int gridRow = y + _viewModel.BoardCenter.y + 1;
+
+        <div class="board-grid-item d-flex justify-center align-center" style="grid-column: @(x + 1); grid-row: @(y + 1)">
+            @if (_viewModel.IsCardAtPosition((x, y)) || (_viewModel.CardMousedOver != null))
+            {
+                <MudDropZone Class="board-drop-zone rounded-lg flex-grow-1"
+                             T="CardVM" Identifier=@($"board-({x},{y})")
+                             CanDrop="@((card) => _viewModel.CanCardBeDroppedAt(card, (x, y)))">
+                </MudDropZone>
+            }
+
+        </div>
+    }
+</div>
+
+<style>
+    .board-drop-zone {
+        width: 100px;
+        height: 100px;
+        max-width: 100px;
+        max-height: 100px;
+
+        background-color: var(--mud-palette-dark-hover);
+    }
+
+    .board-grid {
+        display: grid;
+        grid-template-columns: repeat(@(_viewModel.BoardSize), @(_boardDropZoneSizePx)px);
+        grid-template-rows: repeat(@(_viewModel.BoardSize), @(_boardDropZoneSizePx)px);
+        box-shadow: rgba(50, 50, 93, 0.1) 0px 26px 50px -23px inset, rgba(0, 0, 0, 0.1) 0px 5px 36px -18px inset
+    }
+
+    .board-grid-item {
+        width: @(_boardDropZoneSizePx)px;
+        height: @(_boardDropZoneSizePx)px;
+    }
+
+</style>
+
+@code {
+    private int _boardDropZoneSizePx = 115;
+}

@@ -13,13 +13,12 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddMudServices();
 
 builder.Services.AddScoped<IGameBoardViewModel, GameBoardViewModel>();
-builder.Services.AddScoped<IGameService, StubGameService>();
 builder.Services.AddScoped<IBoardService, BoardService>();
 builder.Services.AddScoped<IWordValidator, DictionaryApiWordValidator>();
 builder.Services.AddScoped<IPlayCardsService, PlayCardsService>();
 builder.Services.AddScoped<IDeckService, DeckService>();
 var handService = new HandService([]);
-handService.HandSize = 7;
+handService.HandSize = 6;
 builder.Services.AddScoped<IHandService, HandService>(_ => handService);
 
 await builder.Build().RunAsync();

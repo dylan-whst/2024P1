@@ -1,0 +1,50 @@
+@using MudBlazor
+@using P1.Services
+@inherits ViewModelComponentBase
+
+<MudPaper ID=@("card-" + Card.Id)
+                    @onmouseover="@(() => _viewModel.CardMousedOver = Card)"
+          @onmouseleave="@(() => _viewModel.CardMousedOver = null)"
+          class=@("card d-flex justify-center align-center " + GetCardHighlightClass(Card.Highlight))
+          Elevation="25">
+    @if (Card.Superscript != null)
+    {
+        <MudText Typo="Typo.subtitle2" Style="position: absolute; top: 10px; right:  10px;">
+            <strong>@Card.Superscript</strong>
+        </MudText>
+    }
+    <MudText Typo="Typo.h4">@Card.Text</MudText>
+</MudPaper>
+
+<style>
+    .card {
+        width: 100px;
+        height: 100px;
+    }
+
+    .card-highlight-success {
+        background-color: #dbf2c9;
+    }
+
+    .card-highlight-failure {
+        background-color: #ffc5bc;
+    }
+
+    .card-highlight-cemented {
+        background-color: lightgray;
+    }
+</style>
+
+@code {
+
+    [Parameter] public CardVM Card { get; set; }
+
+    private string GetCardHighlightClass(CardHighlight contextHighlight) =>
+        contextHighlight switch {
+            CardHighlight.Success => "card-highlight-success",
+            CardHighlight.Failure => "card-highlight-failure",
+            CardHighlight.Cemented => "card-highlight-cemented",
+            CardHighlight.None => "card-highlight-none",
+            _ => throw new ArgumentOutOfRangeException(nameof(contextHighlight), contextHighlight, null)
+        };
+}

@@ -7,188 +7,34 @@
 @inject IJSRuntime JS;
 
 <div class="d-flex">
-    <div style="width: 250px" class="info-panel ma-0 rounded-3">
-        <MudText Typo="Typo.h4" ID="turn-view" Class="ma-3 d-flex" Style="color: steelblue">
-            <strong>Turn: @_viewModel.Turn</strong>
+    <GameInfoView/>
 
-        </MudText>
-        <MudText Typo="Typo.h4" ID="points-view" Class="ma-3 d-flex">
-            <strong>Points: @_viewModel.TurnPoints</strong>
-        </MudText>
-        @if (_cardMousedOver != null)
-        {
-            <MudText ID="word-definition-view" Class="ma-5" Typo="Typo.h6">@_cardMousedOver.HoverText</MudText>
-
-        }
-    </div>
-    
     <div>
         <MudDropContainer Class="d-flex flex-column flex-grow-1" T="CardVM"
                           Items="_viewModel.Cards"
                           ItemsSelector="@((item, dropzone) => item.Place.ToString() == dropzone)"
                           ItemDropped="ItemUpdated">
             <ChildContent>
-
-
                 <div style="width: 100%; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center">
-                    <div @ref=@boardGridRef class="board-grid" style="max-width: 80vw; max-height: 60vh; overflow:  scroll;">
-                        @foreach (var (x, y) in _viewModel.BoardDropZonePositions)
-                        {
-                        int gridColumn = x + _gridSize / 2;
-                        int gridRow = y + _gridSize / 2;
-
-                        <div class="board-grid-item d-flex justify-center align-center" style="grid-column: @(gridColumn); grid-row: @(gridRow)">
-                            @if (_viewModel.IsCardAtPosition((x, y)) || (_cardMousedOver != null))
-                            {
-                                <MudDropZone Class="board-drop-zone rounded-lg flex-grow-1"
-                                             T="CardVM" Identifier=@($"board-({x},{y})")
-                                             CanDrop="@((card) => CanCardBeDroppedAt(card, (x, y)))">
-                                </MudDropZone>
-                            }
-
-                        </div>
-                        }
-                    </div>
+                    <BoardGridView/>
                     <div class="d-flex align-items-center">
-                        <MudDropZone Class="hand-drop-zone m-5 rounded-lg d-flex flex-grow-1  flex-wrap " T="CardVM"
-                                     Identifier="hand"
-                                     CanDrop="@((card) => _viewModel.CanCardBeMovedToHand(card))"/>
-                        
-                        @if (_viewModel.TurnState == TurnState.PLAYING)
-                        {
-                            <MudButton ID='play-cards-btn'
-                                       Size="Size.Large" Color="Color.Success" Variant="Variant.Filled" Style="height: 80px; width:  140px"
-                                       Disabled="_viewModel.NumCardsOnBoard == 0"
-                                       OnClick="_viewModel.OnPlayCards">
-                                <MudText Typo="Typo.h5">
-                                    <strong>Play</strong>
-                                </MudText>
-                            </MudButton>
-                        } else if (_viewModel.TurnState == TurnState.REVIEWING_RESULTS_VALID)
-                        {
-                            <MudButton ID='next-turn-btn'
-                                       Size="Size.Large"Variant="Variant.Filled" Style="height: 80px; width:  140px"
-                                       OnClick="_viewModel.OnNextTurn">
-                                <MudText Typo="Typo.h5">
-                                    <strong>Next Turn</strong>
-                                </MudText>
-                            </MudButton>
-                        } else if (_viewModel.TurnState == TurnState.REVIEWING_RESULTS_INVALID)
-                        {
-                            <MudButton ID='try-again-btn'
-                                       Size="Size.Large"Variant="Variant.Filled" Style="height: 80px; width:  140px"
-                                       OnClick="_viewModel.OnBackFromResultsView">
-                                <MudText Typo="Typo.h5">
-                                    <strong>Try Again</strong>
-                                </MudText>
-                            </MudButton>
-                        }
-                        
-                        
+                        <HandView/>
+                        <TurnControls/>
                     </div>
-
                 </div>
-
             </ChildContent>
             <ItemRenderer>
-                <MudPaper ID=@("card-" + context.Id)
-                          @onmouseover="@(() => _cardMousedOver = context)"
-                          @onmouseleave="@(() => _cardMousedOver = null)"
-                          class=@("card d-flex justify-center align-center " + GetCardHighlightClass(context.Highlight))
-                          Elevation="25">
-                    @if (context.Superscript != null)
-                    {
-                        <MudText Typo="Typo.subtitle2" Style="position: absolute; top: 10px; right:  10px;">
-                            <strong>@context.Superscript</strong>
-                        </MudText>
-                    }
-                    <MudText Typo="Typo.h4">@context.Text</MudText>
-                </MudPaper>
+                <CardView Card="@context"/>
             </ItemRenderer>
         </MudDropContainer>
     </div>
 </div>
 
 
-
-
-
-<style>
-    .card {
-        width: 100px;
-        height: 100px;
-    }
-    
-    .card-highlight-success {
-        background-color: #dbf2c9;
-    }
-    
-    .card-highlight-failure {
-        background-color: #ffc5bc;
-    }
-
-    .card-highlight-cemented {
-        background-color: lightgray;
-    }
-    
-    .info-panel {
-        background-color: var(--mud-palette-action-default-hover);
-        }
-    
-    .board-drop-zone {
-        width: 100px;
-        height: 100px;
-        max-width: 100px;
-        max-height: 100px;
-        
-        @(_viewModel.NumCardsOnBoard == 0 ? "background-color: var(--mud-palette-dark-hover);" : "")
-    }
-    
-    .hand-drop-zone {
-        align-items: center;
-        justify-content: center;
-        min-width: 900px;
-        max-width: 900px;
-        min-height: 137px;
-        max-height: 137px;
-        display: flex
-    }
-    
-    .hand-drop-zone .card {
-        margin: 7px;
-    }
-    
-    
-    .board-grid {
-        display: grid;
-        grid-template-columns: repeat(@(_gridSize), @(_boardDropZoneSizePx)px);
-        grid-template-rows: repeat(@(_gridSize), @(_boardDropZoneSizePx)px);
-    }
-
-    .board-grid-item {
-        width: @(_boardDropZoneSizePx)px;
-        height: @(_boardDropZoneSizePx)px;
-    }
-</style>
-
 @code {
-    private int _gridSize = 10;
-    private int _boardDropZoneSizePx = 115;
-    private ElementReference boardGridRef;
-    
-    private CardVM? _cardMousedOver;
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override void OnInitialized()
     {
-        if (firstRender)
-        {
-            await CenterScrollPosition();
-        }
-    }
-
-    private async Task CenterScrollPosition()
-    {
-        await JS.InvokeVoidAsync("scrollToCenter", boardGridRef);
+        _viewModel.OnViewStateChanged += StateHasChanged;
     }
     
     private void ItemUpdated(MudItemDropInfo<CardVM> dropItem)
@@ -196,20 +42,4 @@
         _viewModel.MoveCard(dropItem.Item, new CardPlace(dropItem.DropzoneIdentifier));
         StateHasChanged();
     }
-
-    private bool CanCardBeDroppedAt(CardVM card, (int x, int y) pos)
-    {
-        return !_viewModel.IsCardAtPosition(pos)
-               && _viewModel.CanCardBeMovedToBoardPos(card, pos) ;
-    }
-
-    private string GetCardHighlightClass(CardHighlight contextHighlight) =>
-        contextHighlight switch {
-            CardHighlight.Success => "card-highlight-success",
-            CardHighlight.Failure => "card-highlight-failure",
-            CardHighlight.Cemented => "card-highlight-cemented",
-            CardHighlight.None => "card-highlight-none",
-            _ => throw new ArgumentOutOfRangeException(nameof(contextHighlight), contextHighlight, null)
-        };
-
 }

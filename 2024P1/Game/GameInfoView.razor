@@ -1,0 +1,22 @@
+@using MudBlazor
+@inherits ViewModelComponentBase
+
+<div style="width: 250px" class="info-panel ma-0 rounded-3">
+    <MudText Typo="Typo.h4" ID="turn-view" Class="ma-3 d-flex" Style="color: steelblue">
+        <strong>Turn @_viewModel.Turn</strong>
+    </MudText>
+    <MudText Typo="Typo.h4" ID="points-view" Class="ma-3 d-flex">
+        <strong>Points: @_viewModel.TurnPoints</strong>
+    </MudText>
+    @* @if (_cardMousedOver != null) *@
+    @* { *@
+    @*     <MudText ID="word-definition-view" Class="ma-5" Typo="Typo.h6">@_cardMousedOver.HoverText</MudText> *@
+    @* *@
+    @* } *@
+</div>
+
+<style>
+    .info-panel {
+        background-color: white;
+    }
+</style>

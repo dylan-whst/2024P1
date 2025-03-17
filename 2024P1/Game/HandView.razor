@@ -1,10 +1,13 @@
 @using P1.Services
 @using MudBlazor
+@using P1.Models
 @inherits ViewModelComponentBase
+
+@inject IGameplayRulesService _gameplayRulesService
 
 <MudDropZone Class="hand-drop-zone m-5 rounded-lg d-flex flex-grow-1  flex-wrap " T="CardVM"
              Identifier="hand"
-             CanDrop="@((card) => _viewModel.CanCardBeMovedToHand(card))"/>
+             CanDrop="@((card) => _gameplayRulesService.CanCardBeMovedToHand(card))"/>
              
 <style>
     .hand-drop-zone {

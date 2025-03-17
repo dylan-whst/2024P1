@@ -80,8 +80,9 @@ Tests for what happens with the view in the 'review state' after playing a valid
         _gameBoardViewModel = new GameBoardViewModel(
             _mockBoardService,
             _mockHandService,
-            Substitute.For<IDeckService>(),
-            _mockPlayCardsService
+            _mockPlayCardsService,
+            Substitute.For<ITurnService>(),
+            Substitute.For<ICardMovementService>()
         );
     }
 

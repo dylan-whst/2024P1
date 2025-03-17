@@ -1,9 +1,20 @@
 @using P1.Services
 @using MudBlazor
+@using P1.Models
 @inherits ViewModelComponentBase
+@implements IDisposable;
+
+@inject IDiscardSelectionService DiscardSelectionService;
 
 @if (_viewModel.TurnState == TurnState.PLAYING)
 {
+    <MudButton ID='discard-cards-btn' Class="mr-5" Style="height: 80px; width:  140px"
+               Size="Size.Medium" Color="Color.Error" Variant="Variant.Outlined" 
+               OnClick="DiscardSelectionService.OnStartDiscarding">
+        <MudText Typo="Typo.h5">
+            <strong>Discard</strong>
+        </MudText>
+    </MudButton>
     <MudButton ID='play-cards-btn'
                Size="Size.Large" Color="Color.Success" Variant="Variant.Filled" Style="height: 80px; width:  140px"
                Disabled="_viewModel.NumCardsOnBoard == 0"
@@ -12,8 +23,23 @@
             <strong>Play</strong>
         </MudText>
     </MudButton>
-} else if (_viewModel.TurnState == TurnState.REVIEWING_RESULTS_VALID)
-{
+} else if (_viewModel.TurnState == TurnState.DISCARDING) {
+      <MudButton ID='discard-cards-cancel-btn' Class="mr-5" Style="height: 80px; width:  140px"
+                 Size="Size.Large" Color="Color.Default" Variant="Variant.Outlined" 
+                 OnClick="DiscardSelectionService.OnStopDiscarding">
+          <MudText Typo="Typo.h5">
+              <strong>Cancel</strong>
+          </MudText>
+      </MudButton>  
+      <MudButton ID='discard-cards-confirm-btn'
+                 Size="Size.Large" Color="Color.Error" Variant="Variant.Filled" Style="height: 80px; width:  140px"
+                 OnClick="_viewModel.OnDiscardSelectedCards"
+                 Disabled="DiscardSelectionService.SelectedForDiscard.Count == 0">
+          <MudText Typo="Typo.h5">
+              <strong>Discard</strong>
+          </MudText>
+      </MudButton>  
+ }else if (_viewModel.TurnState == TurnState.REVIEWING_RESULTS_VALID) {
     <MudButton ID='next-turn-btn'
                Size="Size.Large"Variant="Variant.Filled" Style="height: 80px; width:  140px"
                OnClick="_viewModel.OnNextTurn">
@@ -30,4 +56,19 @@
             <strong>Try Again</strong>
         </MudText>
     </MudButton>
+}
+
+@code {
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        DiscardSelectionService.OnDiscardStateChanged += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        base.Dispose();
+        DiscardSelectionService.OnDiscardStateChanged -= StateHasChanged;
+    }
 }

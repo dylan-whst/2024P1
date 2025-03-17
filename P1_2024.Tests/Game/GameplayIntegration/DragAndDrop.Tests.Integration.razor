@@ -16,8 +16,6 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
 
 
 @code {
-    private IGameBoardViewModel _gameBoardViewModel;
-    
     private List<Card> MockHand => [
         new LetterCard() { Id = 1, Letter = 'a'},
         new LetterCard() { Id = 2, Letter = 'b'},
@@ -25,23 +23,27 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
         new LetterCard() { Id = 4, Letter = 'd'},
     ];
 
+    private int _boardSize = 10;
+
     [SetUp]
     public void SetUp()
     {
-        var handService = new HandService(MockHand);
-        handService.HandSize = 4;
+        // Mocks
+        Services.AddScoped<IPlayCardsService>(_ => Substitute.For<IPlayCardsService>());
+        Services.AddScoped<ITurnService>(_ => Substitute.For<ITurnService>());
+        Services.AddScoped<IDeckService>(_ => Substitute.For<IDeckService>());
 
-        var boardService = new BoardService();
-        boardService.BoardSize = 10;
-        
-        _gameBoardViewModel = new GameBoardViewModel(
-            boardService,
-            handService,
-            Substitute.For<IDeckService>(),
-            Substitute.For<IPlayCardsService>()
-        );
-        
-        Services.AddScoped(_ => _gameBoardViewModel);
+        // Services Under Test
+        var boardService = new BoardService { BoardSize = _boardSize };
+        var handService  = new HandService(MockHand) { HandSize = 4 };
+        Services.AddScoped<IGameBoardViewModel, GameBoardViewModel>();
+        Services.AddScoped<IBoardService>(_ => boardService);
+        Services.AddScoped<IHandService>(_ => handService);
+        Services.AddScoped<ICardMovementService, CardMovementService>();
+        Services.AddScoped<IGameplayRulesService, GameplayRulesService>();
+
+
+        // MudBlazor + JSInterop
         Services.AddMudServices();
         JSInterop.Mode = JSRuntimeMode.Loose;
     }
@@ -70,7 +72,7 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
         _cut = Render(@<GameBoard/>);
         _cut.Find("#card-1").MouseOver();
 
-        var expectedNumDropZones = _gameBoardViewModel.BoardSize * _gameBoardViewModel.BoardSize;
+        var expectedNumDropZones = _boardSize * _boardSize;
         _cut.FindAll(".board-drop-zone").Should().HaveCount(expectedNumDropZones);
     }
 

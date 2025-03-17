@@ -9,7 +9,7 @@ public interface IPlayCardsService
 
 public class PlayCardsService: IPlayCardsService
 {
-    private static List<List<int>> PlayedWordHistory { get; set; } = [];
+    private List<List<int>> PlayedWordHistory { get; set; } = [];
     
     private readonly IWordValidator _wordValidator;
 

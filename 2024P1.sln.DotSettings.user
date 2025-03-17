@@ -1,9 +1,18 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=1e930e5f_002D0d0a_002D42ce_002Da413_002D581f049147f7/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="CounterCSharpTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
-  &lt;TestAncestor&gt;
-    &lt;TestId&gt;NUnit3x::CC777FF1-4CFE-466F-ADAE-EE676E6B8977::net8.0::BlazorTestProject1.Game.GameBoard_DragAndDrop_Tests&lt;/TestId&gt;
-  &lt;/TestAncestor&gt;
-&lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=a5425930_002D315f_002D4e24_002Dbd39_002D0f864c270e20/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Session" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
-  &lt;Project Location="/Users/dylanwhitehurst/RiderProjects/2024P1/P1_2024.Tests" Presentation="&amp;lt;P1_2024.Tests&amp;gt;" /&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=717144eb_002D4d93_002D4d28_002D9a4b_002D357f5df145cd/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Initially__NoError" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;Or&gt;
+    &lt;TestAncestor&gt;
+      &lt;TestId&gt;NUnit3x::CC777FF1-4CFE-466F-ADAE-EE676E6B8977::net8.0::BlazorTestProject1.Game.GameplayIntegration.CardDiscarding_Tests_Integration&lt;/TestId&gt;
+      &lt;TestId&gt;NUnit3x::CC777FF1-4CFE-466F-ADAE-EE676E6B8977::net8.0::BlazorTestProject1.Services.Domain.DiscardingService_Tests_Unit.OnStartDiscarding_ShouldSetTurnStateToDiscarding&lt;/TestId&gt;
+      &lt;TestId&gt;NUnit3x::CC777FF1-4CFE-466F-ADAE-EE676E6B8977::net8.0::BlazorTestProject1.Services.Domain.DiscardingService_Tests_Unit.OnCancelDiscarding_ShouldSetTurnStateToPlaying&lt;/TestId&gt;
+    &lt;/TestAncestor&gt;
+    &lt;And&gt;
+      &lt;Namespace&gt;BlazorTestProject1.Services.Domain&lt;/Namespace&gt;
+      &lt;Project Location="/Users/dylanwhitehurst/RiderProjects/2024P1/P1_2024.Tests" Presentation="&amp;lt;P1_2024.Tests&amp;gt;" /&gt;
+    &lt;/And&gt;
+    &lt;And&gt;
+      &lt;Namespace&gt;BlazorTestProject1.Game.GameplayIntegration&lt;/Namespace&gt;
+      &lt;Project Location="/Users/dylanwhitehurst/RiderProjects/2024P1/P1_2024.Tests" Presentation="&amp;lt;P1_2024.Tests&amp;gt;" /&gt;
+    &lt;/And&gt;
+  &lt;/Or&gt;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

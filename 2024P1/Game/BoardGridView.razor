@@ -1,7 +1,10 @@
 @using P1.Services
 @using MudBlazor
+@using P1.Models
 
 @inherits ViewModelComponentBase
+
+@inject IGameplayRulesService _gameplayRulesService
 
 <div class="board-grid" style="overflow:  scroll; background: #f4f1f1; border-radius: 13px">
     @foreach (var (x, y) in _viewModel.BoardDropZonePositions)
@@ -14,7 +17,7 @@
             {
                 <MudDropZone Class="board-drop-zone rounded-lg flex-grow-1"
                              T="CardVM" Identifier=@($"board-({x},{y})")
-                             CanDrop="@((card) => _viewModel.CanCardBeDroppedAt(card, (x, y)))">
+                             CanDrop="@((card) => _gameplayRulesService.CanCardBeDroppedAt(card, (x, y)))">
                 </MudDropZone>
             }
 

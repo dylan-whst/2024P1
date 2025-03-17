@@ -8,6 +8,7 @@
 @using NUnit.Framework
 @using P1.Models
 @using P1.Services
+@using TestContext = Bunit.TestContext
 @inherits GameBoardTestBase
 
 
@@ -16,45 +17,47 @@ after playing basic letter cards on an empty board.
 
 
 @code {
-    private IGameBoardViewModel _gameBoardViewModel;
-    private IWordValidator _mockWordValidator = Substitute.For<IWordValidator>();
-    private IBoardService _mockBoardService = Substitute.For<IBoardService>();
-    private IHandService _mockHandService = Substitute.For<IHandService>();
+    
+    private IWordValidator _mockWordValidator;
+    private IBoardService _mockBoardService;
+    private IHandService _mockHandService;
 
     [SetUp]
     public void SetUp()
     {
+        // Substitutes
+        _mockWordValidator = Substitute.For<IWordValidator>();
+        _mockBoardService  = Substitute.For<IBoardService>();
+        _mockHandService   = Substitute.For<IHandService>();
+        
+        // (initial mock state)
         _mockHandService.Cards.Returns(new List<Card>());
         
-        Services.AddScoped(_ => _gameBoardViewModel);
+        Services.AddScoped<IBoardService>(_ => _mockBoardService);
+        Services.AddScoped<IHandService>(_ => _mockHandService);
+        Services.AddScoped<IWordValidator>(_ => _mockWordValidator);
+        Services.AddScoped<ITurnService>(_ => Substitute.For<ITurnService>());
+        Services.AddScoped<IDeckService>(_ => Substitute.For<IDeckService>());
+
+        // Services under test
+        Services.AddScoped<IGameplayRulesService, GameplayRulesService>();
+        Services.AddScoped<IPlayCardsService, PlayCardsService>();
+        Services.AddScoped<ICardMovementService, CardMovementService>();
+        Services.AddScoped<IGameBoardViewModel, GameBoardViewModel>();
+
+        // External Services
         Services.AddMudServices();
+        
+        // Config
         JSInterop.Mode = JSRuntimeMode.Loose;
     }
 
-    private void ConstructVM()
+    [TearDown]
+    public void TearDown()
     {
-        _gameBoardViewModel = new GameBoardViewModel(
-            _mockBoardService,
-            _mockHandService,
-            Substitute.For<IDeckService>(),
-            new PlayCardsService(_mockWordValidator)
-        );
     }
 
-
-    [Test]
-    public void NoCardsOnBoard__PlayCardsBtnDisabled()
-    {
-        _mockBoardService.BoardState.Returns(
-            new Dictionary<(int x, int y), Card>() );
-        ConstructVM();
-        
-        _cut = Render(@<GameBoard/>);
-
-        _cut.Find("#play-cards-btn").HasAttribute("disabled")
-            .Should().BeTrue();
-    }
-
+    // Test Objects
     private LetterCard cardA => new() { Id = 1, Letter = 'a', Points = 1};
     private LetterCard cardB => new() { Id = 2, Letter = 'b', Points = 3 };
     private LetterCard cardC => new() { Id = 3, Letter = 'c', Points = 3 };
@@ -62,6 +65,29 @@ after playing basic letter cards on an empty board.
     private LetterCard cardE => new() { Id = 5, Letter = 'e', Points = 1 };
     private LetterCard cardI => new() { Id = 6, Letter = 'i', Points = 1 };
     private LetterCard cardO => new() { Id = 7, Letter = 'o', Points = 1 };
+
+    [Test]
+    public void NoCardsOnBoard__PlayCardsBtnDisabled()
+    {
+        _mockBoardService.BoardState.Returns(
+            new Dictionary<(int x, int y), Card>() );
+        
+        _cut = Render(@<GameBoard/>);
+
+        _cut.Find("#play-cards-btn").HasAttribute("disabled")
+            .Should().BeTrue();
+    }
+
+    
+
+    private void ExpectCardHighlights(int[] ids, CardHighlight expectedHighlight)
+    {
+        var gameBoardViewModel = Services.GetService<IGameBoardViewModel>();
+        gameBoardViewModel.Cards
+            .Where(c => ids.Contains(c.Id))
+            .Select(c => c.Highlight)
+            .Should().AllBeEquivalentTo(expectedHighlight);
+    }
     
     [Test]
     public void CardIsOnBoard__PlayCardsBtnIsEnabled()
@@ -71,20 +97,11 @@ after playing basic letter cards on an empty board.
             {
                 {(x: 0, y: 0), cardA},
             } );
-        ConstructVM();
         
         _cut = Render(@<GameBoard/>);
 
         _cut.Find("#play-cards-btn").HasAttribute("disabled")
             .Should().BeFalse();
-    }
-
-    private void ExpectCardHighlights(int[] ids, CardHighlight expectedHighlight)
-    {
-        _gameBoardViewModel.Cards
-            .Where(c => ids.Contains(c.Id))
-            .Select(c => c.Highlight)
-            .Should().AllBeEquivalentTo(expectedHighlight);
     }
     
     [Test]
@@ -99,7 +116,6 @@ after playing basic letter cards on an empty board.
                 {(x: 1, y: 0), cardA},
                 {(x: 2, y: 0), cardD},
             } );
-        ConstructVM();
         _cut = Render(@<GameBoard/>);
         
         _cut.Find("#play-cards-btn").Click();
@@ -119,13 +135,11 @@ after playing basic letter cards on an empty board.
                 {(x: 1, y: 0), cardD},
                 {(x: 2, y: 0), cardA},
             } );
-        ConstructVM();
         _cut = Render(@<GameBoard/>);
         
         _cut.Find("#play-cards-btn").Click();
 
         ExpectCardHighlights([cardB.Id, cardD.Id, cardA.Id], CardHighlight.Failure);
-
     }
     
     [Test]
@@ -146,7 +160,6 @@ after playing basic letter cards on an empty board.
                 //forms 'AD'
                 {(x: 1, y: 1), cardD}
             } );
-        ConstructVM();
         _cut = Render(@<GameBoard/>);
         
         _cut.Find("#play-cards-btn").Click();
@@ -173,7 +186,6 @@ after playing basic letter cards on an empty board.
                 //forms 'BD'
                 {(x: 2, y: 1), cardD}
             } );
-        ConstructVM();
         _cut = Render(@<GameBoard/>);
         
         _cut.Find("#play-cards-btn").Click();
@@ -210,7 +222,6 @@ after playing basic letter cards on an empty board.
                 {(x: 2, y: 2), cardO},
                 {(x: 3, y: 2), cardE},
             } );
-        ConstructVM();
         _cut = Render(@<GameBoard/>);
         
         _cut.Find("#play-cards-btn").Click();
@@ -250,7 +261,6 @@ after playing basic letter cards on an empty board.
                 {(x: 2, y: 2), cardO},
                 {(x: 2, y: 3), cardE},
             } );
-        ConstructVM();
         _cut = Render(@<GameBoard/>);
         
         _cut.Find("#play-cards-btn").Click();
@@ -280,7 +290,6 @@ after playing basic letter cards on an empty board.
                 {(x: 1, y: 1), cardC},
                 {(x: 1, y: 2), cardE},
             } );
-        ConstructVM();
         _cut = Render(@<GameBoard/>);
         
         _cut.Find("#play-cards-btn").Click();
@@ -306,7 +315,6 @@ after playing basic letter cards on an empty board.
                 {(x: 1, y: 1), cardC},
                 {(x: 1, y: 2), cardE},
             } );
-        ConstructVM();
         _cut = Render(@<GameBoard/>);
         
         _cut.Find("#play-cards-btn").Click();
@@ -329,7 +337,6 @@ after playing basic letter cards on an empty board.
                 {(x: 2, y: 0), cardD},
             } );
         _mockBoardService.GetDropZonePositions().Returns([(x: 0, y: 0), (x: 1, y: 0), (x: 2, y: 0)]);
-        ConstructVM();
         _cut = Render(@<GameBoard/>);
         _cut.Find("#play-cards-btn").Click();
 
@@ -338,6 +345,9 @@ after playing basic letter cards on an empty board.
         var def = _cut.Find("#word-definition-view");
         def.ToMarkup().Should().Contain("mock definition");
     }
+    
+    //TODO  user sees points and definition views during review screen
+    //TODO hand is in 'disabled' state, functionally and visually.x
     
     
 }

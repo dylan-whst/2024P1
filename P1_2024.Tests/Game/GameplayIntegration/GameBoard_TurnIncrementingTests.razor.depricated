@@ -17,8 +17,8 @@ This also involves testing the hand/deck service interplay when drawing cards.
 
 @code {
     private IGameBoardViewModel _gameBoardViewModel;
-    private IBoardService _boardService;
-    private IPlayCardsService _mockPlayCardsService = Substitute.For<IPlayCardsService>();
+    private IBoardService _mockBoardService;
+    private IPlayCardsService _mockPlayCardsService;
     private IHandService _handService;
     private IDeckService _deckService;
 
@@ -26,12 +26,27 @@ This also involves testing the hand/deck service interplay when drawing cards.
     [SetUp]
     public void SetUp()
     {
+        // Substitutes
+        _mockPlayCardsService = Substitute.For<IPlayCardsService>();
+        _mockBoardService = Substitute.For<IBoardService>();
         _mockPlayCardsService.GetPlayCardsResult(Arg.Any<Dictionary<(int x, int y), Card>>())
             .Returns(_mockValidPlayResult);
-        _boardService = new BoardService(_mockBoardState);
         
-        Services.AddScoped(_ => _gameBoardViewModel);
+        Services.AddScoped<IPlayCardsService>(_ => _mockPlayCardsService);
+        Services.AddScoped<ITurnService>(_ => Substitute.For<ITurnService>());
+        Services.AddScoped<IBoardService>(_ => _mockBoardService);
+
+        // Services under test
+        Services.AddScoped<IHandService, HandService>();
+        Services.AddScoped<IDeckService, DeckService>();
+        Services.AddScoped<IGameplayRulesService, GameplayRulesService>();
+        Services.AddScoped<ICardMovementService, CardMovementService>();
+        Services.AddScoped<IGameBoardViewModel, GameBoardViewModel>();
+
+        // External Services
         Services.AddMudServices();
+        
+        // Config
         JSInterop.Mode = JSRuntimeMode.Loose;
     }
     
@@ -59,28 +74,23 @@ This also involves testing the hand/deck service interplay when drawing cards.
             }
         ]
     };
-
-    private void ConstructVM()
-    {
-        _gameBoardViewModel = new GameBoardViewModel(
-            _boardService,
-            _handService,
-            _deckService,
-            _mockPlayCardsService
-        );
-    }
-
     [Test]
     public void Initially__NoError()
     {
         
     }
     
-    // TODO: what happens when deck doesn't have enough cards? Want to play around and think about it first
+    // TODO: Need to think about what happens when deck doesn't have enough cards
     [Test]
-    public void NextTurnClicked__EmptyHand_DeckHasEnoughCards__HandIsFilledWithTopOfDeck()
+    public void NextTurnClicked__EmptyHand_DeckHasEnoughCards_ValidBoard__HandIsFilledWithTopOfDeck()
     {
         _handService = new HandService([]);
+        // board is in a valid state (has any card)
+        _mockBoardService.BoardState.Returns(
+            new Dictionary<(int x, int y), Card>
+            {
+                { (1, 1), new LetterCard() { Id = 1, Letter = 'a', Points = 1 } }
+            });
         var deckCards = new List<Card> {
             new LetterCard() { Id = 1, Letter = 'a', Points = 1 },
             new LetterCard() { Id = 2, Letter = 'b', Points = 1 },
@@ -88,7 +98,8 @@ This also involves testing the hand/deck service interplay when drawing cards.
             };
         _handService.HandSize = 3;
         _deckService = new DeckService(deckCards);
-        ConstructVM();
+        Services.AddScoped<IHandService>(_ => _handService);
+        Services.AddScoped<IDeckService>(_ => _deckService);
         _cut = Render(@<GameBoard/>);
         _cut.Find("#play-cards-btn").Click();
 
@@ -113,7 +124,6 @@ This also involves testing the hand/deck service interplay when drawing cards.
         };
         _handService.HandSize = 4;
         _deckService = new DeckService(deckCards);
-        ConstructVM();
         _cut = Render(@<GameBoard/>);
         _cut.Find("#play-cards-btn").Click();
 
@@ -137,7 +147,6 @@ This also involves testing the hand/deck service interplay when drawing cards.
     {
         _handService = new HandService(_mockFullHand);
         _deckService = new DeckService([]);
-        ConstructVM();
         _cut = Render(@<GameBoard/>);
         _cut.Find("#play-cards-btn").Click();
 
@@ -154,7 +163,6 @@ This also involves testing the hand/deck service interplay when drawing cards.
     {
         _handService = new HandService(_mockFullHand);
         _deckService = new DeckService([]);
-        ConstructVM();
         _cut = Render(@<GameBoard/>);
         _cut.Find("#play-cards-btn").Click();
 

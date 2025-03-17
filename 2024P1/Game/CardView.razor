@@ -1,12 +1,17 @@
 @using MudBlazor
+@using P1.Models
 @using P1.Services
 @inherits ViewModelComponentBase
 
+@inject IDiscardSelectionService DiscardSelectionService;
+
 <MudPaper ID=@("card-" + Card.Id)
-                    @onmouseover="@(() => _viewModel.CardMousedOver = Card)"
+          @onmouseover="@(() => _viewModel.CardMousedOver = Card)"
           @onmouseleave="@(() => _viewModel.CardMousedOver = null)"
+          @onclick="OnClickCard"
           class=@("card d-flex justify-center align-center " + GetCardHighlightClass(Card.Highlight))
-          Elevation="25">
+          Elevation="25"
+          >
     @if (Card.Superscript != null)
     {
         <MudText Typo="Typo.subtitle2" Style="position: absolute; top: 10px; right:  10px;">
@@ -14,6 +19,10 @@
         </MudText>
     }
     <MudText Typo="Typo.h4">@Card.Text</MudText>
+
+    @if (IsCardSelectedForDiscard(Card)) {
+        <div class="discard-overlay">✖</div>
+    }
 </MudPaper>
 
 <style>
@@ -33,6 +42,17 @@
     .card-highlight-cemented {
         background-color: lightgray;
     }
+
+    .discard-overlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 2rem;
+        color: red;
+        font-weight: bold;
+        pointer-events: none; /* Prevents blocking clicks */
+    }
 </style>
 
 @code {
@@ -47,4 +67,18 @@
             CardHighlight.None => "card-highlight-none",
             _ => throw new ArgumentOutOfRangeException(nameof(contextHighlight), contextHighlight, null)
         };
+
+    private void OnClickCard()
+    {
+        if (_viewModel.TurnState == TurnState.DISCARDING)
+        {
+            DiscardSelectionService.ToggleSelectForDiscard(Card);
+        }
+    }
+    
+    private bool IsCardSelectedForDiscard(CardVM card)
+    {
+        return DiscardSelectionService.SelectedForDiscard.Contains(card);
+    }
+
 }

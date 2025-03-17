@@ -39,7 +39,7 @@
     
     private void ItemUpdated(MudItemDropInfo<CardVM> dropItem)
     {
-        _viewModel.MoveCard(dropItem.Item, new CardPlace(dropItem.DropzoneIdentifier));
+        _viewModel.OnMoveCard(dropItem.Item, new CardPlace(dropItem.DropzoneIdentifier));
         StateHasChanged();
     }
 }

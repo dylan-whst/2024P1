@@ -1,0 +1,129 @@
+
+@using System.Net.Http
+@using _2024P1.Game
+@using AngleSharp.Dom
+@using FluentAssertions
+@using MudBlazor
+@using MudBlazor.Services
+@using NSubstitute
+@using NUnit.Framework
+@using P1.Models
+@using P1.Services
+@using _2024P1
+@inherits GameBoardTestBase
+
+
+User can select up to 3 cards per turn to discard
+
+
+@code {
+    [SetUp]
+    public void SetUp()
+    {
+        Services.AddScoped(_ => new HttpClient());
+        Services.AddMudServices();
+
+        Services.AddScoped<IGameBoardViewModel, GameBoardViewModel>();
+        Services.AddScoped<IBoardService, BoardService>();
+        Services.AddScoped<IWordValidator, DictionaryApiWordValidator>();
+        Services.AddScoped<IPlayCardsService, PlayCardsService>();
+        Services.AddScoped<IDeckService, DeckService>();
+        Services.AddScoped<IDiscardSelectionService, DiscardSelectionService>();
+
+        Services.AddScoped<IGameplayRulesService, GameplayRulesService>();
+        Services.AddScoped<ITurnService, TurnService>();
+        Services.AddScoped<ICardMovementService, CardMovementService>();
+
+        var handService = new HandService([]);
+        handService.HandSize = 6;
+        Services.AddScoped<IHandService, HandService>(_ => handService);
+
+
+        // External Services
+        Services.AddMudServices();
+        
+        // Config
+        JSInterop.Mode = JSRuntimeMode.Loose;
+    }
+
+    [Test]
+    public void Initially__NoError()
+    {
+        Render(@<App/>);
+    }
+
+    [Test]
+    public void UserClicksDiscard__SeesCancelAndConfirmBtns()
+    {
+        var cut = Render(@<App/>);
+
+        cut.Find("#discard-cards-btn").Click();
+
+        cut.Find("#discard-cards-confirm-btn");
+        cut.Find("#discard-cards-cancel-btn");
+    }
+    
+    [Test]
+    public void UserClicksDiscard__DiscardBtnIsDisabled()
+    {
+        var cut = Render(@<App/>);
+
+        cut.Find("#discard-cards-btn").Click();
+
+        cut.Find("#discard-cards-confirm-btn");
+
+        cut.Find("#discard-cards-confirm-btn").HasAttribute("disabled")
+            .Should().BeTrue();
+
+    }
+    
+    [Test]
+    public void UserSelectsCard__DiscardNotDisabled()
+    {
+        var cut = Render(@<App/>);
+        
+        cut.Find("#discard-cards-btn").Click();
+        cut.Find(".card").Click();
+        
+        cut.Find("#discard-cards-confirm-btn").HasAttribute("disabled")
+            .Should().BeFalse();
+    }
+    
+    [Test]
+    public void UserClicksCancelDiscard__NoCardsSelected__NoLongerSeesCancelAndConfirmBtns()
+    {
+        var cut = Render(@<App/>);
+        cut.Find("#discard-cards-btn").Click();
+        
+        cut.Find("#discard-cards-cancel-btn").Click();
+        
+        cut.FindAll("#discard-cards-confirm-btn").Should().BeEmpty();
+        cut.FindAll("#discard-cards-cancel-btn").Should().BeEmpty();
+    }
+    
+    [Test]
+    public void UserClicksCancelDiscard__CardsSelected__NoError()
+    {
+        var cut = Render(@<App/>);
+        cut.Find("#discard-cards-btn").Click();
+        cut.FindAll(".card").Take(2).ToList(); 
+        
+        cut.Find("#discard-cards-cancel-btn").Click();
+    }
+
+    [Test]
+    public void UserClicksConfirmDiscard__WithSelectedCards__CardsAreRemoved_AndNewOnesDrawn()
+    {
+        var viewModel = Services.GetService<IGameBoardViewModel>();
+        var cardsBefore = new List<CardVM>(viewModel.Cards);
+        var cut = Render(@<App/>);
+        cut.Find("#discard-cards-btn").Click();
+        
+        var selectedCards = cut.FindAll(".card").Take(2).ToList();
+        selectedCards.ForEach(card => card.Click());
+        cut.Find("#discard-cards-confirm-btn").Click();
+        
+        // has 2 new cards but 4 are the same.
+        viewModel.Cards.Intersect(cardsBefore).Count().Should().Be(4);
+    }
+}

@@ -126,4 +126,23 @@ User can select up to 3 cards per turn to discard
         // has 2 new cards but 4 are the same.
         viewModel.Cards.Intersect(cardsBefore).Count().Should().Be(4);
     }
+    
+    [Test]
+    public void ClickingSelectedCard__AfterAlreadySelected_AndAnotherCardSelected__ClickedCardBecomesUnselected()
+    {
+        // 2 cards selected for discard
+        var cut = Render(@<App/>);
+        cut.Find("#discard-cards-btn").Click();
+        var cards = cut.FindAll(".card").Take(2).ToList();
+        cards[0].Click();
+        cards[1].Click();
+        
+        // Click the same card again to toggle selection off
+        cards[1].Click();
+
+        // card was discarded
+        cut.FindAll(".discard-overlay").Count().Should().Be(1);
+
+    }
+
 }

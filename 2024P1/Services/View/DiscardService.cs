@@ -67,14 +67,10 @@ public class DiscardSelectionService : IDiscardSelectionService
 
     public void ToggleSelectForDiscard(CardVM card)
     {
-        // prevent selecting more cards than allowed
-        if (MaxDiscardSelection == SelectedForDiscard.Count)
-            return;
-        
         // toggle selection
         if (SelectedForDiscard.Contains(card))
             SelectedForDiscard.Remove(card);
-        else
+        else if (SelectedForDiscard.Count < MaxDiscardSelection)
             SelectedForDiscard.Add(card);
         
         OnDiscardStateChanged?.Invoke();

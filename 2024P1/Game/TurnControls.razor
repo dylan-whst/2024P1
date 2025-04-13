@@ -17,7 +17,7 @@
     </MudButton>
     <MudButton ID='play-cards-btn'
                Size="Size.Large" Color="Color.Success" Variant="Variant.Filled" Style="height: 80px; width:  140px"
-               Disabled="_viewModel.NumCardsOnBoard == 0"
+               Disabled="!_viewModel.IsBoardValid"
                OnClick="_viewModel.OnPlayCards">
         <MudText Typo="Typo.h5">
             <strong>Play</strong>

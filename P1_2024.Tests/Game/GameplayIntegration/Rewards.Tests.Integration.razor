@@ -1,0 +1,103 @@
+
+@using System.Net.Http
+@using _2024P1.Game
+@using AngleSharp.Dom
+@using FluentAssertions
+@using MudBlazor
+@using MudBlazor.Services
+@using NSubstitute
+@using NUnit.Framework
+@using P1.Models
+@using P1.Services
+@using _2024P1
+@inherits GameBoardTestBase
+
+
+@code {
+    IWordValidator _mockWordValidator;
+
+    [SetUp]
+    public void SetUp()
+    {
+        Services.AddScoped(_ => new HttpClient());
+        Services.AddMudServices();
+        
+        // config
+        // predictable cards
+        var testDeck = new List<Card>
+        {
+            new LetterCard { Id = 1, Letter = 'a', Points = 1 },
+            new LetterCard { Id = 2, Letter = 'b', Points = 1 },
+            new LetterCard { Id = 3, Letter = 'c', Points = 1 },
+            new LetterCard { Id = 4, Letter = 'd', Points = 1 },
+            new LetterCard { Id = 5, Letter = 'e', Points = 1 },
+            new LetterCard { Id = 6, Letter = 'f', Points = 1 }
+        };
+        // only fake external apis
+        _mockWordValidator = Substitute.For<IWordValidator>();
+        
+        Services.AddScoped<IGameBoardViewModel, GameBoardViewModel>();
+        Services.AddScoped<IBoardService, BoardService>();
+        Services.AddScoped<IWordValidator>(_ => _mockWordValidator);
+        Services.AddScoped<IPlayCardsService, PlayCardsService>();
+        Services.AddScoped<IDeckService>(_ => new DeckService(testDeck));
+        Services.AddScoped<IDiscardSelectionService, DiscardSelectionService>();
+
+        Services.AddScoped<IGameplayRulesService, GameplayRulesService>();
+        Services.AddScoped<ITurnService, TurnService>();
+        Services.AddScoped<ICardMovementService, CardMovementService>();
+
+        var handService = new HandService([]);
+        handService.HandSize = 6;
+        Services.AddScoped<IHandService, HandService>(_ => handService);
+
+
+        // External Services
+        Services.AddMudServices();
+        
+        // Config
+        JSInterop.Mode = JSRuntimeMode.Loose;
+    }
+
+    [Test]
+    public void Initially__NoError()
+    {
+        Render(@<App/>);
+    }
+
+    [Test]
+    public void UserPlaysCards__InvalidCards__DoesntGetPoints()
+    {
+        _cut = Render(@<App/>);
+        _mockWordValidator.Validate("abc").Returns(new WordValidationResult(false, ""));
+        // cards abc (not a word)
+        DragCardToContainer(1, BoardStr(1, 2));
+        DragCardToContainer(2, BoardStr(2, 2));
+        DragCardToContainer(3, BoardStr(3, 2));
+
+        _cut.Find("#play-cards-btn").HasAttribute("disabled").Should().BeFalse();
+        _cut.Find("#play-cards-btn").Click();
+
+        Services.GetService<IGameBoardViewModel>()
+            .TurnPoints.Should().Be(0);
+    }
+    
+    [Test]
+    public void UserPlaysCards__ValidCards__GetsPoints()
+    {
+        _cut = Render(@<App/>);
+        _mockWordValidator.Validate("abc").Returns(new WordValidationResult(true, ""));
+        // cards abc (pretend it is a word)
+        DragCardToContainer(1, BoardStr(1, 2));
+        DragCardToContainer(2, BoardStr(2, 2));
+        DragCardToContainer(3, BoardStr(3, 2));
+
+        _cut.Find("#play-cards-btn").HasAttribute("disabled").Should().BeFalse();
+        _cut.Find("#play-cards-btn").Click();
+
+        Services.GetService<IGameBoardViewModel>()
+            .TurnPoints.Should().Be(3);
+    }
+    
+
+}

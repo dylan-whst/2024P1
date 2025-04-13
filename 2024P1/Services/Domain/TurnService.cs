@@ -8,7 +8,7 @@ namespace P1.Services;
 
 public interface ITurnService
 {
-    int TurnPoints { get;}
+    int TurnPoints { get; set; }
     TurnState TurnState { get; set; }
     int Turn { get; }
 

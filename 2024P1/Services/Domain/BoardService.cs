@@ -28,7 +28,7 @@ public class BoardService: IBoardService
         BoardState = new();
     }
 
-    public int BoardSize { get; set; } = 5;
+    public int BoardSize { get; set; } = 6;
 
     public (int x, int y) BoardCenter =>
         ((int)Math.Ceiling((double)BoardSize / 2), (int)Math.Ceiling((double)BoardSize / 2));

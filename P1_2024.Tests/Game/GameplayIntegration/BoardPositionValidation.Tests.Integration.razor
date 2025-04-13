@@ -1,0 +1,90 @@
+
+@using System.Net.Http
+@using _2024P1.Game
+@using AngleSharp.Dom
+@using FluentAssertions
+@using MudBlazor
+@using MudBlazor.Services
+@using NSubstitute
+@using NUnit.Framework
+@using P1.Models
+@using P1.Services
+@using _2024P1
+@inherits GameBoardTestBase
+
+
+User can select up to 3 cards per turn to discard
+
+
+@code {
+    [SetUp]
+    public void SetUp()
+    {
+        Services.AddScoped(_ => new HttpClient());
+        Services.AddMudServices();
+
+        Services.AddScoped<IGameBoardViewModel, GameBoardViewModel>();
+        Services.AddScoped<IBoardService, BoardService>();
+        Services.AddScoped<IWordValidator, DictionaryApiWordValidator>();
+        Services.AddScoped<IPlayCardsService, PlayCardsService>();
+        Services.AddScoped<IDeckService, DeckService>();
+        Services.AddScoped<IDiscardSelectionService, DiscardSelectionService>();
+
+        Services.AddScoped<IGameplayRulesService, GameplayRulesService>();
+        Services.AddScoped<ITurnService, TurnService>();
+        Services.AddScoped<ICardMovementService, CardMovementService>();
+
+        var handService = new HandService([]);
+        handService.HandSize = 6;
+        Services.AddScoped<IHandService, HandService>(_ => handService);
+
+
+        // External Services
+        Services.AddMudServices();
+        
+        // Config
+        JSInterop.Mode = JSRuntimeMode.Loose;
+    }
+
+    [Test]
+    public void Initially__NoError()
+    {
+        Render(@<App/>);
+    }
+
+    [Test]
+    public void UserPlacesNoCards__OnEmptyBoard__PlayIsDisabled()
+    {
+        _cut = Render(@<App/>);
+
+        _cut.Find("#play-cards-btn").HasAttribute("disabled").Should().BeTrue();
+    }
+    
+    [Test]
+    public void UserPlaces3LetterLine__OnEmptyBoard__PlayIsNotDisabled()
+    {
+        _cut = Render(@<App/>);
+
+        var cardIds = _cut.FindComponents<CardView>().Select(c => c.Instance.Card.Id).ToList();
+        DragCardToContainer(cardIds[0], BoardStr(1, 2));
+        DragCardToContainer(cardIds[1], BoardStr(2, 2));
+        DragCardToContainer(cardIds[2], BoardStr(3, 2));
+
+            
+        _cut.Find("#play-cards-btn").HasAttribute("disabled").Should().BeFalse();
+    }
+    
+    [Test]
+    public void User3LetterLShape__OnEmptyBoard__PlayIsDisabled()
+    {
+        _cut = Render(@<App/>);
+
+        var cardIds = _cut.FindComponents<CardView>().Select(c => c.Instance.Card.Id).ToList();
+        DragCardToContainer(cardIds[0], BoardStr(1, 2));
+        DragCardToContainer(cardIds[1], BoardStr(2, 2));
+        DragCardToContainer(cardIds[2], BoardStr(1, 3));
+            
+        _cut.Find("#play-cards-btn").HasAttribute("disabled").Should().BeTrue();
+    }
+
+}

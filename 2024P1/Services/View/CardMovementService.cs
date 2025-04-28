@@ -9,6 +9,7 @@ public interface ICardMovementService
     
     /// <returns> A list of the cards that were drawn </returns>
     List<Card> DrawCards();
+    List<Card> DrawCards(int numCards);
 }
 
 
@@ -47,6 +48,20 @@ public class CardMovementService : ICardMovementService
     {
         var drawnCards = new List<Card>();
         while (_handService.Cards.Count < _handService.HandSize)
+        {
+            // move card from deck to hand and vm
+            var card = _deckService.Pop();
+            _handService.Add(card);
+            drawnCards.Add(card);
+        }
+        
+        return drawnCards;
+    }
+
+    public List<Card> DrawCards(int numCards)
+    {
+        var drawnCards = new List<Card>();
+        for (int i = 0; i < numCards; i++)
         {
             // move card from deck to hand and vm
             var card = _deckService.Pop();

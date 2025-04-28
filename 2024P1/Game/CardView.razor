@@ -1,17 +1,19 @@
 @using MudBlazor
 @using P1.Models
 @using P1.Services
+@implements IDisposable;
 @inherits ViewModelComponentBase
-
 @inject IDiscardSelectionService DiscardSelectionService;
 
 <MudPaper ID=@("card-" + Card.Id)
-          @onmouseover="@(() => _viewModel.CardMousedOver = Card)"
+                     @onmouseover="@(() => _viewModel.CardMousedOver = Card)"
           @onmouseleave="@(() => _viewModel.CardMousedOver = null)"
           @onclick="OnClickCard"
-          class=@("card d-flex justify-center align-center " + GetCardHighlightClass(Card.Highlight))
-          Elevation="25"
-          >
+          
+          class=@($"card d-flex justify-center align-center {GetCardHighlightClass(Card.Highlight)} {(IsCardSelectedForDiscard(Card) ? "selected-for-discard" : "")}")
+          Elevation="25">
+
+
     @if (Card.Superscript != null)
     {
         <MudText Typo="Typo.subtitle2" Style="position: absolute; top: 10px; right:  10px;">
@@ -19,16 +21,15 @@
         </MudText>
     }
     <MudText Typo="Typo.h4">@Card.Text</MudText>
-
-    @if (IsCardSelectedForDiscard(Card)) {
-        <div class="discard-overlay">✖</div>
-    }
 </MudPaper>
 
 <style>
     .card {
         width: 85px;
         height: 85px;
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
     }
 
     .card-highlight-success {
@@ -43,21 +44,26 @@
         background-color: lightgray;
     }
 
-    .discard-overlay {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 2rem;
-        color: red;
-        font-weight: bold;
-        pointer-events: none; /* Prevents blocking clicks */
+    .selected-for-discard {
+        border: 3px solid #fa5838;
+        transform: translateY(-15px);
     }
+    
 </style>
 
 @code {
 
     [Parameter] public CardVM Card { get; set; }
+
+    protected override void OnInitialized()
+    {
+        DiscardSelectionService.OnDiscardStateChanged += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        DiscardSelectionService.OnDiscardStateChanged -= StateHasChanged;
+    }
 
     private string GetCardHighlightClass(CardHighlight contextHighlight) =>
         contextHighlight switch {

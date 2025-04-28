@@ -4,13 +4,15 @@
 @inherits ViewModelComponentBase
 @implements IDisposable;
 
-@inject IDiscardSelectionService DiscardSelectionService;
+@inject IDiscardSelectionService _discardSelectionService;
+@inject ITurnService _turnService;
 
 @if (_viewModel.TurnState == TurnState.PLAYING)
 {
     <MudButton ID='discard-cards-btn' Class="mr-5" Style="height: 80px; width:  140px"
                Size="Size.Medium" Color="Color.Error" Variant="Variant.Outlined" 
-               OnClick="DiscardSelectionService.OnStartDiscarding">
+               OnClick="_discardSelectionService.OnStartDiscarding"
+               Disabled="_turnService.NumDiscardsLeft == 0">
         <MudText Typo="Typo.h5">
             <strong>Discard</strong>
         </MudText>
@@ -26,7 +28,7 @@
 } else if (_viewModel.TurnState == TurnState.DISCARDING) {
       <MudButton ID='discard-cards-cancel-btn' Class="mr-5" Style="height: 80px; width:  140px"
                  Size="Size.Large" Color="Color.Default" Variant="Variant.Outlined" 
-                 OnClick="DiscardSelectionService.OnStopDiscarding">
+                 OnClick="_discardSelectionService.OnStopDiscarding">
           <MudText Typo="Typo.h5">
               <strong>Cancel</strong>
           </MudText>
@@ -34,7 +36,7 @@
       <MudButton ID='discard-cards-confirm-btn'
                  Size="Size.Large" Color="Color.Error" Variant="Variant.Filled" Style="height: 80px; width:  140px"
                  OnClick="_viewModel.OnDiscardSelectedCards"
-                 Disabled="DiscardSelectionService.SelectedForDiscard.Count == 0">
+                 Disabled="_discardSelectionService.SelectedForDiscard.Count == 0">
           <MudText Typo="Typo.h5">
               <strong>Discard</strong>
           </MudText>
@@ -50,7 +52,7 @@
 } else if (_viewModel.TurnState == TurnState.REVIEWING_RESULTS_INVALID)
 {
     <MudButton ID='try-again-btn'
-               Size="Size.Large"Variant="Variant.Filled" Style="height: 80px; width:  140px"
+               Size="Size.Large"Variant="Variant.Filled" Color="Color.Info" Style="height: 80px; width:  140px"
                OnClick="_viewModel.OnBackFromResultsView">
         <MudText Typo="Typo.h5">
             <strong>Try Again</strong>
@@ -63,12 +65,12 @@
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        DiscardSelectionService.OnDiscardStateChanged += StateHasChanged;
+        _discardSelectionService.OnDiscardStateChanged += StateHasChanged;
     }
 
     public void Dispose()
     {
         base.Dispose();
-        DiscardSelectionService.OnDiscardStateChanged -= StateHasChanged;
+        _discardSelectionService.OnDiscardStateChanged -= StateHasChanged;
     }
 }

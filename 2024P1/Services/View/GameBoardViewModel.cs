@@ -27,6 +27,7 @@ public interface IGameBoardViewModel
     IEnumerable<(int x, int y)> BoardDropZonePositions { get; }
     int NumCardsOnBoard { get; }
     bool IsBoardValid { get; }
+    bool IsDraggingDisabled(CardVM card);
     bool IsCardAtPosition((int x, int y) pos);
     
     // User Actions
@@ -106,6 +107,12 @@ public class GameBoardViewModel : IGameBoardViewModel
         {
             if (NumCardsOnBoard == 0)
                 return false;
+
+            // invalid if no new cards on board
+            if (Cards.Where(c => !c.Place.IsHand).All(c => c.IsCemented))
+                return false;
+            
+            // enforce single line of cards:
             
             // var newlyPlaced = Cards.Where(c => c.IsCemented == false && c.Place.IsHand == false);
             // var isXInOneLine = newlyPlaced.Select(c => c.Place.BoardPos?.x).Distinct().Count() == 1;
@@ -121,6 +128,14 @@ public class GameBoardViewModel : IGameBoardViewModel
     public IEnumerable<(int x, int y)> BoardDropZonePositions => _boardService.GetDropZonePositions();
     public int BoardSize => _boardService.BoardSize;
     public (int x, int y) BoardCenter => _boardService.BoardCenter;
+    public bool IsDraggingDisabled(CardVM card)
+    {
+        if (_turnService.TurnState != TurnState.PLAYING)
+            return true;
+
+        return false;
+    }
+
     public bool IsCardAtPosition((int x, int y) pos) =>
         _boardService.BoardState.ContainsKey(pos);
     
@@ -155,6 +170,8 @@ public class GameBoardViewModel : IGameBoardViewModel
             _turnService.TurnPoints += playCardsResult.PointsTotal;
             foreach (var id in playCardsResult.CardLineResults.SelectMany(cardLineResult => cardLineResult.CardIds))
                 _cardVmDict[id].IsCemented = true;
+            
+            _playCardsService.RememberPlayedWords(playCardsResult.CardLineResults.Select(res => res.CardIds).ToList());
         }
         else
         {
@@ -190,14 +207,14 @@ public class GameBoardViewModel : IGameBoardViewModel
         foreach (var cardVm in discardedCards)
             _cardVmDict.Remove(cardVm.Id);
         
+        _turnService.NumDiscardsLeft -= 1;
         _discardSelectionService.OnStopDiscarding();
         
-        var drawnCards = _cardMovementService.DrawCards();
+        var drawnCards = _cardMovementService.DrawCards(discardedCards.Count());
         foreach (var card in drawnCards)
             AddCardToVM(card, CardPlace.InHand);
         
-        OnViewStateChanged.Invoke();
-    }
+        OnViewStateChanged.Invoke(); }
 
     private void AddCardToVM(Card card, CardPlace place)
     {

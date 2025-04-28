@@ -83,6 +83,24 @@
     }
     
     [Test]
+    public void UserPlaysCards__Invalid_RepeatedPlayAfterTryAgain__CardsStillHighlighted()
+    {
+        _cut = Render(@<App/>);
+        _mockWordValidator.Validate("abc").Returns(new WordValidationResult(false, ""));
+        // cards abc (not a word)
+        DragCardToContainer(1, BoardStr(1, 2));
+        DragCardToContainer(2, BoardStr(2, 2));
+        DragCardToContainer(3, BoardStr(3, 2));
+
+
+        _cut.Find("#play-cards-btn").Click();
+        _cut.Find("#try-again-btn").Click();
+        _cut.Find("#play-cards-btn").Click();
+
+        _cut.FindAll(".card-highlight-failure").Count.Should().Be(3);
+    }
+    
+    [Test]
     public void UserPlaysCards__ValidCards__GetsPoints()
     {
         _cut = Render(@<App/>);

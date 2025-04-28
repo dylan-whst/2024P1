@@ -64,7 +64,7 @@ User can select up to 3 cards per turn to discard
     }
     
     [Test]
-    public void UserClicksDiscard__DiscardBtnIsDisabled()
+    public void UserClicksDiscard__NothingSelected__ConfirmDiscardBtnIsDisabled()
     {
         var cut = Render(@<App/>);
 
@@ -128,6 +128,24 @@ User can select up to 3 cards per turn to discard
     }
     
     [Test]
+    public void UserClicksConfirmDiscard__WithSelectedCards_AndSomeCardsWereMovedToBoard__ExpectedNumCardsDrawn()
+    {
+        _cut = Render(@<App/>);
+        var cards = _cut.FindComponents<CardView>().Select(c => c.Instance.Card).ToList();
+        DragCardToContainer(cards[0].Id, BoardStr(1, 1));
+        DragCardToContainer(cards[1].Id, BoardStr(1, 2));
+        _cut.Find("#discard-cards-btn").Click();
+        
+        _cut.FindAll(".hand .card").Take(2).ToList()
+            .ForEach(card => card.Click());
+        _cut.Find("#discard-cards-confirm-btn").Click();
+        
+        // since hand size is 6 and 2 are on the board, there should only be 4 in hand.
+        var viewModel = Services.GetService<IGameBoardViewModel>();
+        viewModel.Cards.Where(c => c.Place.IsHand).Count().Should().Be(4);
+    }
+    
+    [Test]
     public void ClickingSelectedCard__AfterAlreadySelected_AndAnotherCardSelected__ClickedCardBecomesUnselected()
     {
         // 2 cards selected for discard
@@ -141,7 +159,7 @@ User can select up to 3 cards per turn to discard
         cards[1].Click();
 
         // card was discarded
-        cut.FindAll(".discard-overlay").Count().Should().Be(1);
+        cut.FindAll(".selected-for-discard").Count().Should().Be(1);
 
     }
 

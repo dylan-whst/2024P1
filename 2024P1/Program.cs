@@ -13,7 +13,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
 builder.Services.AddScoped<IGameBoardViewModel, GameBoardViewModel>();
-builder.Services.AddScoped<IBoardService, BoardService>();
+builder.Services.AddScoped<IBoardService, BoardService>(_ => new BoardService().SetBoardSize(5));
 builder.Services.AddScoped<IWordValidator, DictionaryApiWordValidator>();
 builder.Services.AddScoped<IPlayCardsService, PlayCardsService>();
 builder.Services.AddScoped<IDiscardSelectionService, DiscardSelectionService>();
@@ -22,7 +22,7 @@ builder.Services.AddScoped<IGameplayRulesService, GameplayRulesService>();
 builder.Services.AddScoped<ITurnService, TurnService>();
 builder.Services.AddScoped<ICardMovementService, CardMovementService>();
 builder.Services.AddScoped<IDeckService, DeckService>();
-var handService = new HandService([]);
+var handService = new HandService([]).SetHandSize(5);
 handService.HandSize = 6;
 builder.Services.AddScoped<IHandService, HandService>(_ => handService);
 

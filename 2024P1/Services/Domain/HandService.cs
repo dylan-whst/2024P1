@@ -19,6 +19,12 @@ public class HandService : IHandService
     public List<Card> Cards { get; }
     public int HandSize { get; set; } = 5;
 
+    public HandService SetHandSize(int size)
+    {
+        HandSize = size;
+        return this;
+    }
+
     public Card Remove(int id)
     {
         var cardToRemove = Cards.Single(c => c.Id == id);

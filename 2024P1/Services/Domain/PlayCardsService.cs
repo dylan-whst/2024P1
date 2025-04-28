@@ -5,6 +5,7 @@ namespace P1.Services;
 public interface IPlayCardsService
 {
     Task<PlayCardsResult> GetPlayCardsResult(Dictionary<(int x, int y), Card> boardCards);
+    public void RememberPlayedWords(List<List<int>> words);
 }
 
 public class PlayCardsService: IPlayCardsService
@@ -16,6 +17,12 @@ public class PlayCardsService: IPlayCardsService
     public PlayCardsService(IWordValidator wordValidator)
     {
         _wordValidator = wordValidator;
+    }
+
+    public void RememberPlayedWords(List<List<int>> words)
+    {
+        foreach (var word in words)
+            PlayedWordHistory.Add(word);
     }
 
     public async Task<PlayCardsResult> GetPlayCardsResult(Dictionary<(int x, int y), Card> boardCards)
@@ -71,16 +78,7 @@ public class PlayCardsService: IPlayCardsService
                 .OfType<LetterCard>() // for now assume all cards to be letter cards
                 .Select(c => c.Letter));
 
-        bool isAlreadyPlayed;
-        if (HasPlayedWord(cardIds))
-        {
-            isAlreadyPlayed = true;
-        }
-        else
-        {
-            isAlreadyPlayed = false;
-            PlayedWordHistory.Add(cardIds);
-        }
+        bool isAlreadyPlayed = HasPlayedWord(cardIds);
         
         WordValidationResult validationResult = await _wordValidator.Validate(cardsLineWord);
         

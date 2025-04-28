@@ -63,6 +63,7 @@ public class DiscardSelectionService : IDiscardSelectionService
     {
         _turnService.TurnState = TurnState.PLAYING;
         SelectedForDiscard.Clear();
+        OnDiscardStateChanged.Invoke();
     }
 
     public void ToggleSelectForDiscard(CardVM card)

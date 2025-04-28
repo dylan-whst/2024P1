@@ -11,6 +11,9 @@ public interface ITurnService
     int TurnPoints { get; set; }
     TurnState TurnState { get; set; }
     int Turn { get; }
+    
+    int StartingDiscards { get; }
+    int NumDiscardsLeft { get; set; }
 
     void ProgressTurn();
     void SetToReviewing(bool isValid);
@@ -27,6 +30,12 @@ public class TurnService : ITurnService
     public int Turn { get; set; } = 0;
     public int TurnPoints { get; set; } = 0;
     public TurnState TurnState { get; set; } = TurnState.PLAYING;
+    
+
+    public int StartingDiscards { get; } = 2;
+    public int NumDiscardsLeft { get; set; } = 2;
+
+    public int PointsGoal { get; } = 20;
     
     public void ProgressTurn()
     {

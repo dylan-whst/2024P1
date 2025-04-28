@@ -1,12 +1,18 @@
 @using MudBlazor
+@using P1.Services
 @inherits ViewModelComponentBase
+@inject ITurnService _turnService;
+
 
 <div style="width: 250px" class="info-panel ma-0 rounded-3">
-    <MudText Typo="Typo.h4" ID="turn-view" Class="ma-3 d-flex" Style="color: steelblue">
+    <MudText Typo="Typo.h4" ID="turn-view" Class="ma-3 d-flex">
         <strong>Turn @_viewModel.Turn</strong>
     </MudText>
-    <MudText Typo="Typo.h4" ID="points-view" Class="ma-3 d-flex">
+    <MudText Typo="Typo.h4" ID="points-view" Class="ma-3 d-flex" Color="Color.Info">
         <strong>Points: @_viewModel.TurnPoints</strong>
+    </MudText>
+    <MudText Typo="Typo.h4" ID="points-view" Class="ma-3 d-flex" Color="Color.Error">
+        <strong>Discards: @_turnService.NumDiscardsLeft</strong>
     </MudText>
     @* @if (_cardMousedOver != null) *@
     @* { *@

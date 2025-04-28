@@ -5,8 +5,10 @@
 
 @inject IGameplayRulesService _gameplayRulesService
 
-<MudDropZone Class="hand-drop-zone m-5 rounded-lg d-flex flex-grow-1  flex-wrap " T="CardVM"
+<MudDropZone  
+             Class="hand hand-drop-zone m-5 rounded-lg d-flex flex-grow-1  flex-wrap " T="CardVM"
              Identifier="hand"
+             ItemDisabled="@(card => _viewModel.IsDraggingDisabled(card))"
              CanDrop="@((card) => _gameplayRulesService.CanCardBeMovedToHand(card))"/>
              
 <style>

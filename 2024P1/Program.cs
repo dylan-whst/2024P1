@@ -22,6 +22,8 @@ builder.Services.AddScoped<IGameplayRulesService, GameplayRulesService>();
 builder.Services.AddScoped<ITurnService, TurnService>();
 builder.Services.AddScoped<ICardMovementService, CardMovementService>();
 builder.Services.AddScoped<IDeckService, DeckService>();
+builder.Services.AddScoped<IPlayerAttributesService, PlayerAttributesService>();
+builder.Services.AddScoped<IRoundsService, RoundsService>();
 var handService = new HandService([]).SetHandSize(5);
 handService.HandSize = 6;
 builder.Services.AddScoped<IHandService, HandService>(_ => handService);

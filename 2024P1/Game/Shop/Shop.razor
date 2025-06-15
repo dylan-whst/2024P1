@@ -1,0 +1,61 @@
+@using MudBlazor
+@using P1.Models.Shop
+@using P1.Services
+@inject IRoundsService _roundsService;
+@inject IGameBoardViewModel _gameBoardViewModel;
+
+<div style="display: flex; flex-direction: column">
+    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center">
+        <MudText Typo="Typo.h4">You Completed Round @_roundsService.Round!</MudText>
+        <MudText Style="opacity: 80%" Typo="Typo.h6">Choose an upgrade to continue to the next round:</MudText>
+    </div>
+
+    <div class="mt-5" style="display: flex; width: 100%; height: 100%; justify-content: center; align-items: center">
+        <div style="display: flex">
+            <UpgradeCard @onclick="() => OnClick(Upgrade.PLUS_1_BOARD)" UpgradeTitle="+1 Board Size" IsClicked="selectedUpgrade == Upgrade.PLUS_1_BOARD">
+                Increasing the board size gives more space for words.
+            </UpgradeCard>
+            <UpgradeCard @onclick="() => OnClick(Upgrade.PLUS_2_HAND)" UpgradeTitle="+1 Hand Size" IsClicked="selectedUpgrade == Upgrade.PLUS_2_HAND">
+                Draw one more card every turn.
+            </UpgradeCard>
+            <UpgradeCard @onclick="() => OnClick(Upgrade.PLUS_2_DISCARDS)" UpgradeTitle="+2 Discards" IsClicked="selectedUpgrade == Upgrade.PLUS_2_DISCARDS">
+                Increase the number of times you can discard per turn.
+            </UpgradeCard>
+        </div>
+    </div>
+</div>
+
+<style>
+    .upgrade-card {
+        background-color: #ebebeb;
+        transition: transform 0.3s, box-shadow 0.3s, border 0.3s;
+        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2);
+    }
+    .upgrade-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px 0 rgba(0, 0, 0, 0.3);
+    }
+    .clicked-card {
+        transform: translateY(-100px) !important;
+        background-color: var(--mud-palette-success-lighten);
+        opacity: 0;
+        transition: transform 1s, background-color 1s, opacity 1s;
+    }
+</style>
+
+@code {
+    Upgrade? selectedUpgrade = null;
+
+    async void OnClick(Upgrade upgrade)
+    {
+        selectedUpgrade = upgrade;
+        
+        await Task.Delay(1000);
+
+        _gameBoardViewModel.Upgrade(upgrade);
+        _gameBoardViewModel.Reset();
+        _roundsService.ProgressToBoard();
+    }
+}
+
+

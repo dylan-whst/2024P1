@@ -1,0 +1,26 @@
+
+@using MudBlazor
+@using P1.Services
+
+<MudDialog >
+    <TitleContent>
+        <MudText Typo="Typo.h5">How many rounds can you get?</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudImage Style="width: 600px;" Src="images/instructions.png"></MudImage>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => MudDialog.Close()">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public MudDialogInstance MudDialog { get; set; }
+
+    protected override void OnInitialized()
+    {
+        
+        MudDialog.Options = new DialogOptions() { MaxWidth = MaxWidth.Large };
+    }
+
+}

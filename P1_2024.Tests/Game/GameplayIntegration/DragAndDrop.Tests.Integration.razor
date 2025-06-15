@@ -9,6 +9,7 @@
 @using NUnit.Framework
 @using P1.Models
 @using P1.Services
+@using _2024P1
 @inherits GameBoardTestBase
 
 
@@ -41,6 +42,8 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
         Services.AddScoped<IHandService>(_ => handService);
         Services.AddScoped<ICardMovementService, CardMovementService>();
         Services.AddScoped<IGameplayRulesService, GameplayRulesService>();
+        Services.AddScoped<IDiscardSelectionService, DiscardSelectionService>();
+        Services.AddScoped<IPlayerAttributesService, PlayerAttributesService>();
 
 
         // MudBlazor + JSInterop
@@ -52,14 +55,14 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
     [Test]
     public void Initially__()
     {
-        _cut = Render(@<GameBoard/>);
+        _cut = Render(@<App/>);
 
     }
     
     [Test]
     public void Initially__BoardIsEmpty()
     {
-        _cut = Render(@<GameBoard/>);
+        _cut = Render(@<App/>);
 
         CardShouldNotBeIn(cardId: 1, container: BoardStr(0, 0));
         CardShouldNotBeIn(cardId: 2, container: BoardStr(0, 0));
@@ -69,7 +72,7 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
     [Test]
     public void Initially__ExpectedNumDropZones()
     {
-        _cut = Render(@<GameBoard/>);
+        _cut = Render(@<App/>);
         _cut.Find("#card-1").MouseOver();
 
         var expectedNumDropZones = _boardSize * _boardSize;
@@ -80,7 +83,7 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
     [Test]
     public void UserDragsCardOntoBoard__ItMovesFromHandToBoard()
     {
-        _cut = Render(@<GameBoard/>);
+        _cut = Render(@<App/>);
 
         DragCardToContainer(1, container: BoardStr(0, 0));
 
@@ -94,7 +97,7 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
     [Test]
     public void UserDragsCardOntoBoard__OriginAdjacentDropzonesAppear()
     {
-        _cut = Render(@<GameBoard/>);
+        _cut = Render(@<App/>);
 
         DragCardToContainer(1, container: BoardStr(1, 1));
         
@@ -109,7 +112,7 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
     [Test]
     public void UserDragsCardOntoEmptyBoard__OriginAdjacentBoard_RightOfOrigin__Expected3ZonesAppear()
     {
-        _cut = Render(@<GameBoard/>);
+        _cut = Render(@<App/>);
         // first make origin adjacent zones appear
         DragCardToContainer(1, container: BoardStr(1, 1));
         
@@ -126,7 +129,7 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
     [Test]
     public void UserDragsCardOntoEmptyBoard__OriginAdjacentBoard_LeftOfOrigin__Expected3ZonesAppear()
     {
-        _cut = Render(@<GameBoard/>);
+        _cut = Render(@<App/>);
         DragCardToContainer(1, container: BoardStr(2, 2));
         
         DragCardToContainer(2, container: BoardStr(1, 2));
@@ -140,7 +143,7 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
     [Test]
     public void UserDragsCardOntoNonEmptyBoard__DoesntGetPlaced()
     {
-        _cut = Render(@<GameBoard/>);
+        _cut = Render(@<App/>);
         DragCardToContainer(1, container: BoardStr(0, 0));
         
         DragCardToContainer(2, container: BoardStr(0, 0));
@@ -152,7 +155,7 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
     [Test]
     public void UserDragsCardFromBoard__TooDifferentAvailablePosition__ItMoves()
     {
-        _cut = Render(@<GameBoard/>);
+        _cut = Render(@<App/>);
         DragCardToContainer(1, container: BoardStr(1, 1));
         DragCardToContainer(2, container: BoardStr(0, 1));
         
@@ -165,7 +168,7 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
     [Test]
     public void UserDragsCard__BackToHand_DoesntBreakConnection__ItMovesBackToHand()
     {
-        _cut = Render(@<GameBoard/>);
+        _cut = Render(@<App/>);
         DragCardToContainer(1, container: BoardStr(0, 0));
     
         DragCardToContainer(1, container: "hand");
@@ -177,7 +180,7 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
     [Test]
     public void UserDragsCard__BackToHand_ItWouldBreakConnection__DoesntMove()
     {
-        _cut = Render(@<GameBoard/>);
+        _cut = Render(@<App/>);
         // drag cards such that 1 is in the middle.
         // so if it moves, it will break the 'line'
         DragCardToContainer(1, container: BoardStr(1, 1));
@@ -192,7 +195,7 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
     [Test]
     public void UserDragsCard__OriginCard_AdjacentToItself__DoesntMove()
     {
-        _cut = Render(@<GameBoard/>);
+        _cut = Render(@<App/>);
         DragCardToContainer(1, container: BoardStr(1, 1));
     
         DragCardToContainer(1, container: BoardStr(0, 1));
@@ -203,7 +206,7 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
     [Test]
     public void UserDragsCard__NonOriginCard_AdjacentToItself_WouldBreakBoard__DoesntMove()
     {
-        _cut = Render(@<GameBoard/>);
+        _cut = Render(@<App/>);
         DragCardToContainer(1, container: BoardStr(0, 0));
         DragCardToContainer(2, container: BoardStr(1, 0));
     
@@ -215,7 +218,7 @@ This is a test for drag/drop interactions with the GameBoard view and its model.
     [Test]
     public void UserDragsCard__EdgeCase1__DoesntMove()
     {
-        _cut = Render(@<GameBoard/>);
+        _cut = Render(@<App/>);
 
         DragCardToContainer(1, container: BoardStr(1, 2));
         DragCardToContainer(2, container: BoardStr(0, 2));

@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Components.Web;
+﻿using _2024P1.Game.Shop;
+using Microsoft.AspNetCore.Components.Web;
 using P1.Models;
+using P1.Models.Shop;
 
 namespace P1.Services;
 
@@ -12,14 +14,17 @@ public interface IGameBoardViewModel
 {
     // view state
     List<CardVM> Cards { get; }
+    List<CardVM> HandCards { get; }
     event Action OnViewStateChanged;
     CardVM? CardMousedOver { get; set; }
+    double CardSizePx { get; }
+    bool IsFirstVisit { get; set; }
 
     
     // turn view
     int TurnPoints { get; }
     TurnState TurnState { get; }
-    int Turn { get; }
+    int HandsLeft { get; }
     
     // board view
     int BoardSize { get; }
@@ -36,6 +41,10 @@ public interface IGameBoardViewModel
     void OnBackFromResultsView();
     void OnNextTurn();
     void OnDiscardSelectedCards();
+    void ShuffleHand();
+    void ReturnHand(MouseEventArgs obj);
+    void Upgrade(Upgrade upgrade);
+    void Reset();
 }
 
 
@@ -47,6 +56,8 @@ public class GameBoardViewModel : IGameBoardViewModel
     private ITurnService _turnService;
     private ICardMovementService _cardMovementService;
     private IDiscardSelectionService _discardSelectionService;
+    private IPlayerAttributesService _playerAttributesService;
+    private IDeckService _deckService;
     
     public GameBoardViewModel(
         IBoardService boardService, 
@@ -54,7 +65,9 @@ public class GameBoardViewModel : IGameBoardViewModel
         IPlayCardsService playCardsService,
         ITurnService turnService,
         ICardMovementService cardMovementService,
-        IDiscardSelectionService discardSelectionService)
+        IDiscardSelectionService discardSelectionService,
+        IPlayerAttributesService playerAttributesService,
+        IDeckService deckService)
     {
         _boardService = boardService;
         _handService = handService;
@@ -62,6 +75,8 @@ public class GameBoardViewModel : IGameBoardViewModel
         _turnService = turnService;
         _cardMovementService = cardMovementService;
         _discardSelectionService = discardSelectionService;
+        _playerAttributesService = playerAttributesService;
+        _deckService = deckService;
 
         // initialize cardVMs if model already has state
         foreach (Card card in handService.Cards)
@@ -77,6 +92,7 @@ public class GameBoardViewModel : IGameBoardViewModel
     // view state
     private Dictionary<int, CardVM> _cardVmDict = new();
     public List<CardVM> Cards => _cardVmDict.Values.ToList();
+    public List<CardVM> HandCards => _cardVmDict.Values.Where(c => c.Place.IsHand).ToList();
     public event Action? OnViewStateChanged;
     private CardVM? _cardMousedOver;
     public CardVM? CardMousedOver
@@ -91,11 +107,14 @@ public class GameBoardViewModel : IGameBoardViewModel
             }
         }
     }
+    public bool IsFirstVisit { get; set; } = true;
+
 
     
     // view facade for turn service
-    public int Turn => _turnService.Turn;
-    public int TurnPoints => _turnService.TurnPoints;
+    public int HandsLeft => _turnService.NumHandsLeft;
+    public double CardSizePx =>  ((double) 5/BoardSize) * 85;
+    public int TurnPoints => _turnService.Points;
     public TurnState TurnState => _turnService.TurnState;
 
     // view facade for board service
@@ -167,7 +186,7 @@ public class GameBoardViewModel : IGameBoardViewModel
         {
             _turnService.SetToReviewing(isValid: true);
             
-            _turnService.TurnPoints += playCardsResult.PointsTotal;
+            _turnService.Points += playCardsResult.PointsTotal;
             foreach (var id in playCardsResult.CardLineResults.SelectMany(cardLineResult => cardLineResult.CardIds))
                 _cardVmDict[id].IsCemented = true;
             
@@ -216,6 +235,28 @@ public class GameBoardViewModel : IGameBoardViewModel
         
         OnViewStateChanged.Invoke(); }
 
+    public void ShuffleHand()
+    {
+        var rng = new Random();
+        foreach (var card in HandCards)
+        {
+            _cardVmDict[card.Id].HandOrder = rng.Next();
+        }
+        OnViewStateChanged.Invoke();
+    }
+
+    public void ReturnHand(MouseEventArgs obj)
+    {
+        foreach (var cardVm in Cards.Where(c => !c.IsCemented && !c.Place.IsHand))
+        {
+            var card = _boardService.Remove(cardVm.Place.BoardPos.Value);
+            _handService.Add(card);
+            _cardVmDict[card.Id].Place = CardPlace.InHand;
+        }
+        
+        OnViewStateChanged.Invoke();
+    }
+
     private void AddCardToVM(Card card, CardPlace place)
     {
         _cardVmDict[card.Id] = new CardVM(card, place);
@@ -225,7 +266,10 @@ public class GameBoardViewModel : IGameBoardViewModel
     {
         var drawnCards = _cardMovementService.DrawCards();
         foreach (var card in drawnCards)
+        {
             _cardVmDict[card.Id] = new CardVM(card, CardPlace.InHand);
+        }
+            
     }
 
     private void ResetCardViews()
@@ -235,5 +279,28 @@ public class GameBoardViewModel : IGameBoardViewModel
             card.Highlight = CardHighlight.None;
             card.HoverText = null;
         }
+    }
+
+    public void Upgrade(Upgrade upgrade)
+    {
+        if (upgrade == Models.Shop.Upgrade.PLUS_1_BOARD)
+        {
+            _boardService.BoardSize += 1;
+        } else if (upgrade == Models.Shop.Upgrade.PLUS_2_HAND)
+        {
+            _handService.HandSize += 1;
+        } else if (upgrade == Models.Shop.Upgrade.PLUS_2_DISCARDS)
+        {
+            _playerAttributesService.Discards += 2;
+        }
+    }
+
+    public void Reset()
+    {
+        _boardService.Reset();
+        _handService.Reset();
+        _deckService.Reset();
+        _cardVmDict = new();
+        DrawCards();
     }
 }

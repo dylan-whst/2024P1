@@ -42,6 +42,7 @@
         Services.AddScoped<IPlayCardsService, PlayCardsService>();
         Services.AddScoped<IDeckService>(_ => new DeckService(testDeck));
         Services.AddScoped<IDiscardSelectionService, DiscardSelectionService>();
+        Services.AddScoped<IPlayerAttributesService, PlayerAttributesService>();
 
         Services.AddScoped<IGameplayRulesService, GameplayRulesService>();
         Services.AddScoped<ITurnService, TurnService>();
@@ -115,6 +116,21 @@
 
         Services.GetService<IGameBoardViewModel>()
             .TurnPoints.Should().Be(3);
+    }
+    
+    [Test]
+    public void UserMovesCard__LastCardInHand__NoException()
+    {
+        _cut = Render(@<App/>);
+        _mockWordValidator.Validate("abc").Returns(new WordValidationResult(true, ""));
+        // cards abc (pretend it is a word)
+        DragCardToContainer(1, BoardStr(0, 2));
+        DragCardToContainer(2, BoardStr(1, 2));
+        DragCardToContainer(3, BoardStr(2, 2));
+        DragCardToContainer(4, BoardStr(3, 2));
+        DragCardToContainer(5, BoardStr(4, 2));
+        
+        DragCardToContainer(6, BoardStr(4, 3));
     }
     
 

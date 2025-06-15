@@ -1,33 +1,38 @@
-﻿@page "/"
+﻿
 @using MudBlazor
 @using P1.Models
 @using P1.Services
 
 @inject IGameBoardViewModel _viewModel;
 @inject IJSRuntime JS;
+@inject IDialogService _dialogService;
 
 <div class="d-flex">
-    <GameInfoView/>
+    <GameInfoLeftView/>
 
     <div>
         <MudDropContainer Class="d-flex flex-column flex-grow-1" T="CardVM"
-                          Items="_viewModel.Cards"
+                          Items="_viewModel.Cards.OrderBy(c => c.HandOrder)"
                           ItemsSelector="@((item, dropzone) => item.Place.ToString() == dropzone)"
-                          ItemDropped="ItemUpdated">
+                          ItemDropped="ItemUpdated" >
             <ChildContent>
                 <div style="width: 100%; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center">
                     <BoardGridView/>
-                    <div class="d-flex align-items-center">
+                    <div class="d-flex align-items-center" style="flex-direction: column">
                         <HandView/>
-                        <TurnControls/>
+                        <div class="d-flex" style="width: 90%">
+                            <TurnControls/>
+                        </div>
                     </div>
                 </div>
             </ChildContent>
             <ItemRenderer>
                 <CardView Card="@context"/>
-            </ItemRenderer>
+            </ItemRenderer> 
         </MudDropContainer>
     </div>
+
+    <GameInfoRightView/>
 </div>
 
 
@@ -35,6 +40,13 @@
     protected override void OnInitialized()
     {
         _viewModel.OnViewStateChanged += StateHasChanged;
+
+        if (_viewModel.IsFirstVisit)
+        {
+            _dialogService.Show<InstructionsDialog>();
+            _viewModel.IsFirstVisit = false;
+        }
+            
     }
     
     private void ItemUpdated(MudItemDropInfo<CardVM> dropItem)

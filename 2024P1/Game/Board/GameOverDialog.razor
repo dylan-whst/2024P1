@@ -1,0 +1,26 @@
+
+@using MudBlazor
+@using P1.Services
+@inject NavigationManager _navigationManager
+@inject IRoundsService _roundsService;
+
+<MudDialog>
+    <TitleContent>
+        <MudText></MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.h5">Game Over...</MudText>
+        <MudText>You reached round <strong>@_roundsService.Round</strong>!</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Reload">Try Again</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    private void Reload()
+    {
+        _navigationManager.NavigateTo("/", true);
+    }
+}

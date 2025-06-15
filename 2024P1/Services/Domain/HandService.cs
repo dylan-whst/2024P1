@@ -8,6 +8,7 @@ public interface IHandService
     int HandSize { get; set; }
     Card Remove(int id);
     void Add(Card card);
+    void Reset();
 }
 
 public class HandService : IHandService
@@ -16,7 +17,7 @@ public class HandService : IHandService
     {
         Cards = cards;
     }
-    public List<Card> Cards { get; }
+    public List<Card> Cards { get; private set; }
     public int HandSize { get; set; } = 5;
 
     public HandService SetHandSize(int size)
@@ -36,4 +37,10 @@ public class HandService : IHandService
     {
         Cards.Add(card);
     }
+
+    public void Reset()
+    {
+        Cards = new List<Card>();
+    }
 }
+

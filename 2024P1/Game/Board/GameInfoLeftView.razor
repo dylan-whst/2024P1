@@ -1,0 +1,33 @@
+@using MudBlazor
+@using P1.Services
+@inherits ViewModelComponentBase
+@inject ITurnService _turnService;
+@inject IPlayerAttributesService _playerAttributes;
+
+<div class="d-flex ma-5 mt-10" style="flex-direction: column; height: 78vh">
+    <MudText Typo="Typo.h5" Style="font-size: 28px" ID="points-view" Class="ma-3 d-flex" Color="Color.Info">
+        <strong>@_viewModel.TurnPoints</strong>&nbsp;points
+    </MudText>
+    <MudSpacer/>
+    <MudText Typo="Typo.h5" ID="points-view" Class="ma-3 d-flex" Color="Color.Error">
+        <strong>@_turnService.NumDiscardsLeft</strong>&nbsp;discards
+    </MudText>
+    
+    @if (_turnService.NumHandsLeft == 0 && !_turnService.IsGoalAchieved)
+    {
+        <MudTooltip Arrow="true" Placement="Placement.Right" Text="You have 1 hand left, try to reach the target number of points this turn!">
+            <MudText Typo="Typo.h5" Color="Color.Warning" ID="turn-view" Class="ma-3 d-flex">
+                <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning"/>
+                <strong>@_viewModel.HandsLeft</strong>&nbsp;hands
+            </MudText>
+        </MudTooltip>
+    }
+    else
+    {
+        <MudText Typo="Typo.h5" ID="turn-view" Class="ma-3 d-flex">
+            <strong>@_viewModel.HandsLeft</strong>&nbsp;hands
+        </MudText>
+    }
+</div>
+
+

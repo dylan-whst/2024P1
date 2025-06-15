@@ -9,16 +9,31 @@
 
 @if (_viewModel.TurnState == TurnState.PLAYING)
 {
-    <MudButton ID='discard-cards-btn' Class="mr-5" Style="height: 80px; width:  140px"
-               Size="Size.Medium" Color="Color.Error" Variant="Variant.Outlined" 
+    <MudTooltip Text="Shuffle cards in hand." Placement="Placement.Top">
+        <MudIconButton Icon="@Icons.Material.Filled.Shuffle" ID='shuffle-cards-btn' Style="min-width: 50px; min-height: 50px" Class="ml-10 mr-5"
+                       Size="Size.Medium" Color="Color.Surface" Variant="Variant.Filled"
+                       OnClick="@_viewModel.ShuffleHand"
+                       Disabled="_viewModel.HandCards.Count == 0">
+        </MudIconButton>
+    </MudTooltip>
+    <MudTooltip Text="Return cards to hand." Placement="Placement.Top">
+        <MudIconButton Icon="@Icons.Material.Filled.SubdirectoryArrowLeft" ID='return-cards-btn' Style="min-width: 50px; min-height: 50px"  Class="mr-5"
+                       Size="Size.Medium" Color="Color.Surface" Variant="Variant.Filled"
+                       OnClick="@_viewModel.ReturnHand">
+        </MudIconButton>
+    </MudTooltip>
+    
+    <MudSpacer/>
+    <MudButton ID='discard-cards-btn' Class="mr-5" Style="height: 50px; width:  140px"
+               Size="Size.Medium" Color="Color.Surface" Variant="Variant.Filled" 
                OnClick="_discardSelectionService.OnStartDiscarding"
                Disabled="_turnService.NumDiscardsLeft == 0">
-        <MudText Typo="Typo.h5">
+        <MudText Color="Color.Error" Typo="Typo.h5">
             <strong>Discard</strong>
         </MudText>
     </MudButton>
     <MudButton ID='play-cards-btn'
-               Size="Size.Large" Color="Color.Success" Variant="Variant.Filled" Style="height: 80px; width:  140px"
+               Size="Size.Medium" Color="Color.Success" Variant="Variant.Filled" Style="height: 50px; width:  140px"
                Disabled="!_viewModel.IsBoardValid"
                OnClick="_viewModel.OnPlayCards">
         <MudText Typo="Typo.h5">
@@ -26,15 +41,16 @@
         </MudText>
     </MudButton>
 } else if (_viewModel.TurnState == TurnState.DISCARDING) {
-      <MudButton ID='discard-cards-cancel-btn' Class="mr-5" Style="height: 80px; width:  140px"
-                 Size="Size.Large" Color="Color.Default" Variant="Variant.Outlined" 
+    <MudSpacer/>
+      <MudButton ID='discard-cards-cancel-btn' Class="mr-5" Style="height: 50px; width:  140px"
+                 Size="Size.Medium" Color="Color.Surface" Variant="Variant.Filled" 
                  OnClick="_discardSelectionService.OnStopDiscarding">
           <MudText Typo="Typo.h5">
               <strong>Cancel</strong>
           </MudText>
       </MudButton>  
       <MudButton ID='discard-cards-confirm-btn'
-                 Size="Size.Large" Color="Color.Error" Variant="Variant.Filled" Style="height: 80px; width:  140px"
+                 Size="Size.Medium" Color="Color.Error" Variant="Variant.Filled" Style="height: 50px; width:  140px"
                  OnClick="_viewModel.OnDiscardSelectedCards"
                  Disabled="_discardSelectionService.SelectedForDiscard.Count == 0">
           <MudText Typo="Typo.h5">
@@ -42,8 +58,9 @@
           </MudText>
       </MudButton>  
  }else if (_viewModel.TurnState == TurnState.REVIEWING_RESULTS_VALID) {
+    <MudSpacer/>
     <MudButton ID='next-turn-btn'
-               Size="Size.Large"Variant="Variant.Filled" Style="height: 80px; width:  140px"
+               Size="Size.Large"Variant="Variant.Filled" Style="height: 60px; width:  140px"
                OnClick="_viewModel.OnNextTurn">
         <MudText Typo="Typo.h5">
             <strong>Next Turn</strong>
@@ -51,8 +68,9 @@
     </MudButton>
 } else if (_viewModel.TurnState == TurnState.REVIEWING_RESULTS_INVALID)
 {
+    <MudSpacer/>
     <MudButton ID='try-again-btn'
-               Size="Size.Large"Variant="Variant.Filled" Color="Color.Info" Style="height: 80px; width:  140px"
+               Size="Size.Medium"Variant="Variant.Filled" Color="Color.Info" Style="height: 80px; width:  140px"
                OnClick="_viewModel.OnBackFromResultsView">
         <MudText Typo="Typo.h5">
             <strong>Try Again</strong>

@@ -1,0 +1,55 @@
+@using MudBlazor
+@using P1.Services
+@inherits ViewModelComponentBase
+@inject ITurnService _turnService;
+@inject IDeckService _deckService;
+@inject IPlayerAttributesService _playerAttributes;
+@inject IRoundsService _roundsService;
+
+
+<div style="width: 250px; align-items: start" class="info-panel-right ma-0 rounded-3">
+    <MudCard Class=@("ma-5 " + (_turnService.IsGoalAchieved ? "goal-card-success" : "")) Outlined Elevation="0">
+        <MudCardContent>
+            <MudText Typo="Typo.h5" Style="font-size: 28px">Round <strong>@_roundsService.Round</strong> </MudText>
+            <MudDivider Class="mt-3 mb-3"/>
+            <MudText Typo="Typo.h5">Get <strong class="points-text">@_turnService.PointsGoal</strong> points to win the round.</MudText>
+            <MudText Class="mt-5" Typo="Typo.h6">Progress:
+                <strong class="points-text">@_turnService.Points</strong>/<strong class="points-text">@_turnService.PointsGoal</strong></MudText>
+        </MudCardContent>
+    </MudCard>
+    
+    @if (_turnService.IsGoalAchieved)
+    {
+        <MudButton Class="ml-5" Color="Color.Success" Size="Size.Large" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check"
+                   OnClick="() => _roundsService.ProgressToShop()">
+            Complete Round
+        </MudButton>
+    }
+
+    <MudSpacer/>
+    
+    <MudText Typo="Typo.h5" ID="turn-view" Class="ma-3 mb-10 d-flex">
+        <strong>@_deckService.Cards.Count()</strong>&nbsp;tiles
+    </MudText>
+</div>
+
+<style>
+    .info-panel-right {
+        background-color: white;
+
+        width: 250px;
+        display: flex;
+        flex-direction: column;
+        margin: 100px;
+        padding-top: 47px;
+        padding-bottom: 100px;
+    }
+    
+    .goal-card-success {
+        background-color: var(--mud-palette-success-lighten);
+    }
+    
+    .points-text {
+        color: var(--mud-palette-info);
+    }
+</style>

@@ -1,4 +1,4 @@
-@using MudBlazor
+ @using MudBlazor
 @using P1.Models
 @using P1.Services
 @implements IDisposable;
@@ -25,8 +25,8 @@
 
 <style>
     .card {
-        width: 85px;
-        height: 85px;
+        width: @(_viewModel.CardSizePx)px;
+        height: @(_viewModel.CardSizePx)px;
         transition: all 0.2s ease;
         position: relative;
         overflow: hidden;
@@ -45,8 +45,17 @@
     }
 
     .selected-for-discard {
+        background-color: rgba(250, 88, 56, 0.42);
         border: 3px solid #fa5838;
         transform: translateY(-15px);
+    }
+
+    .card-enter {
+        animation: cardSwipeIn 0.4s ease-out forwards;
+    }
+
+    .card-exit {
+        animation: cardSwipeOut 0.4s ease-in forwards;
     }
     
 </style>
@@ -54,7 +63,7 @@
 @code {
 
     [Parameter] public CardVM Card { get; set; }
-
+    
     protected override void OnInitialized()
     {
         DiscardSelectionService.OnDiscardStateChanged += StateHasChanged;

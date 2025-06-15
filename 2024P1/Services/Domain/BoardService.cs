@@ -11,9 +11,10 @@ public interface IBoardService
     public bool WouldCardBreakBoardIfGone((int x, int y) pos);
     bool WouldCardBreakBoardIfMoved((int x, int y) cardPos, (int x, int y) destPos);
     IEnumerable<(int x, int y)> GetDropZonePositions();
-    int BoardSize { get; }
+    int BoardSize { get; set; }
     (int x, int y) BoardCenter { get; }
 
+    void Reset();
 }
 
 public class BoardService: IBoardService
@@ -38,6 +39,12 @@ public class BoardService: IBoardService
 
     public (int x, int y) BoardCenter =>
         ((int)Math.Ceiling((double)BoardSize / 2), (int)Math.Ceiling((double)BoardSize / 2));
+
+    public void Reset()
+    {
+        BoardState = new Dictionary<(int x, int y), Card>();
+    }
+
     public Dictionary<(int x, int y), Card> BoardState { get; private set; }
     public void Add(Card card, (int x, int y) pos)
     {

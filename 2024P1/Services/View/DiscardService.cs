@@ -46,7 +46,7 @@ public class DiscardSelectionService : IDiscardSelectionService
     }
 
     public List<CardVM> SelectedForDiscard { get; private set; } = new List<CardVM>();
-    public int MaxDiscardSelection { get; private set; } = 2;
+    public int MaxDiscardSelection { get; private set; } = 20;
 
     public void DiscardSelectedCards()
     {

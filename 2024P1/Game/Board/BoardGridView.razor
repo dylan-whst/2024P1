@@ -27,28 +27,31 @@
 
 <style>
     .board-drop-zone {
-        width: 85px;
-        height: 85px;
-        max-width: 85px;
-        max-height: 85px;
+        width: @(_viewModel.CardSizePx)px;
+        height: @(_viewModel.CardSizePx)px;
+        max-width: @(_viewModel.CardSizePx)px;
+        max-height: @(_viewModel.CardSizePx)px;
 
         background-color: var(--mud-palette-dark-hover);
     }
 
     .board-grid {
         display: grid;
-        grid-template-columns: repeat(@(_viewModel.BoardSize), @(_boardDropZoneSizePx)px);
-        grid-template-rows: repeat(@(_viewModel.BoardSize), @(_boardDropZoneSizePx)px);
+        grid-template-columns: repeat(@(_viewModel.BoardSize), @(_boardGridPx)px);
+        grid-template-rows: repeat(@(_viewModel.BoardSize), @(_boardGridPx)px);
         box-shadow: rgba(50, 50, 93, 0.1) 0px 26px 50px -23px inset, rgba(0, 0, 0, 0.1) 0px 5px 36px -18px inset
     }
 
     .board-grid-item {
-        width: @(_boardDropZoneSizePx)px;
-        height: @(_boardDropZoneSizePx)px;
+        width: @(_boardGridPx)px;
+        height: @(_boardGridPx)px;
     }
 
 </style>
 
 @code {
     private int _boardDropZoneSizePx = 100;
+
+
+    private double _boardGridPx => _viewModel.CardSizePx + 15;
 }

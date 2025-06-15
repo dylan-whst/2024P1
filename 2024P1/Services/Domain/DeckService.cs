@@ -6,6 +6,7 @@ public interface IDeckService
 {
     List<Card> Cards { get;  }
     Card Pop();
+    void Reset();
 }
 
 public class DeckService : IDeckService
@@ -27,7 +28,12 @@ public class DeckService : IDeckService
         Cards.Remove(card);
         return card;
     }
-    
+
+    public void Reset()
+    {
+        Cards = GetScrabbleDeck();
+    }
+
     public static List<Card> GetScrabbleDeck()
     {
         var scrabbleDistribution = new List<(char Letter, int Points, int Frequency)>

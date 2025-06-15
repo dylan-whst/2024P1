@@ -1,0 +1,73 @@
+@page "/"
+@using P1.Services
+@using _2024P1.Game.Shop
+@inject IRoundsService _roundsService;
+@implements IDisposable;
+
+<div class="transition-container @( _isTransitioning ? "fade-out" : "fade-in" )" style="height: 100vh; width: 100%; display: flex; justify-content: center; align-items: center">
+    @if (_currentView == View.GameBoard)
+    {
+        <GameBoard/>
+    }
+    else
+    {
+        <Shop/>
+    }
+</div>
+
+<style>
+    .transition-container {
+        transition: opacity 0.3s ease;
+    }
+
+    .fade-in {
+        opacity: 1;
+    }
+
+    .fade-out {
+        opacity: 0;
+    }
+
+</style>
+
+
+@code {
+    private View _currentView = View.GameBoard;
+    private bool _isTransitioning = false;
+
+    public enum View
+    {
+        GameBoard,
+        Shop
+    }
+    
+    protected override void OnInitialized()
+    {
+        _roundsService.OnRoundStateChanged += OnRoundStateChanged;
+    }
+
+    public void Dispose()
+    {
+        _roundsService.OnRoundStateChanged -= OnRoundStateChanged;
+    }
+    
+    
+    private async void OnRoundStateChanged()
+    {
+        if (_isTransitioning) return;
+
+        _isTransitioning = true;
+
+        // Trigger CSS fade out
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(300); // match this to your CSS animation duration
+        
+        _currentView = _roundsService.State == RoundState.PLAYING ? View.GameBoard : View.Shop;
+
+        // Trigger CSS fade in
+        await InvokeAsync(StateHasChanged);
+        _isTransitioning = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+}

@@ -9,6 +9,7 @@ public class CardVM
     
     public CardVM(Card card, CardPlace place)
     {
+        var rng = new Random();
         if (card is LetterCard letterCard)
         {
 
@@ -16,6 +17,7 @@ public class CardVM
             Text = letterCard.Letter.ToString();
             Place = place;
             Id = letterCard.Id;
+            HandOrder = rng.Next();
         }
         else
         {
@@ -48,6 +50,8 @@ public class CardVM
     }
     public string? HoverText { get; set; }
     public bool IsCemented { get; set; } = false;
+    
+    public int HandOrder { get; set; }
 }
 
 public class CardPlace
